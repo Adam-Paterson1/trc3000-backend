@@ -5,10 +5,13 @@
   "main": "index.js",
   "dependencies": {
     "express": "^4.16.3",
-    "pigpio": "^1.1.2",
+    "nodemon": "^1.18.3",
     "socket.io": "^2.1.1"
   },
   "devDependencies": {},
+  "optionalDependencies": {
+    "pigpio": "^1.1.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
