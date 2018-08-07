@@ -54,9 +54,6 @@ server.listen(5000);
 global.log = function(value) {
   io.emit('log', value);
 }
-setInterval(() => {
-  log('howdy')
-}, 300)
 
 
 
