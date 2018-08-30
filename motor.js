@@ -20,11 +20,11 @@ class Motor {
       mode: Gpio.INPUT,
       alert: true
     });
-    enc1.on('alert', (level, tick) => {
+    this.enc1.on('alert', (level, tick) => {
       currPulses++;
     });
     // Add in state machine in here ie: level = 1, and level for other thing is 0 so double switch
-    enc2.on('alert', (level, tick) => {
+    this.enc2.on('alert', (level, tick) => {
       currPulses++;
     });
     // Initial values
@@ -42,6 +42,7 @@ class Motor {
     this.currPulses = 0;
   }
   pwmWrite(pwm) {
+    this.pwm = pwm;
     if (pwm > 0) {
       this.out1.pwmWrite(pwm);
       this.out2.digitalWrite(0);
