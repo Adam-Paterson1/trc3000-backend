@@ -98,40 +98,49 @@ io.on('connection', (client) => {
       if (pwm > 220) {
         pwm = 220;
       }
-      client.emit('tilt', error)
+      client.emit('tilt', {leftRPM: rpm, leftErr: error, leftPWM: pwm})
       console.log(pwm);
       out1.pwmWrite(pwm);
       i++;
     }, timerPeriod)
   });
-  client.on('subscribeToVid', () => {
+  client.on('subscribeToImage', () => {
     console.log('subbing to vid');
-    const rows = 100; // height
-    const cols = 100; // width
-    const blueMat = new cv.Mat(rows, cols, cv.CV_8UC3, [255, 0, 0]);
-    client.emit('image', blueMat);
-    cv.imwrite('blueImage.png', blueMat);
+    //const rows = 100; // height
+    //const cols = 100; // width
+    //const blueMat = new cv.Mat(rows, cols, cv.CV_8UC3, [255, 0, 0]);
+    //client.emit('image', cv.imencode('.jpg', blueMat).toString('base64'));
+    //cv.imwrite('blueImage.png', blueMat);
 
-    let m1 = cv.imread('test1.png');
-    let thresh = m1.threshold(200, 255, cv.THRESH_BINARY);
-    cv.imwrite('test2.png', thresh);
+    //let m1 = cv.imread('some.png');
+    //let thresh = m1.threshold(200, 255, cv.THRESH_BINARY);
+    //cv.imwrite('test3.jpg', thresh);
     //cv.imshow('a window name', blueMat);
-    streamer = spawn('raspivid', ['-t', '0', '-n', '-o', '-', '-w', 480, '-h', 480, '-fps', 6, '-pf', 'baseline']);
-    streamer.on("exit", function(code){
-      console.log("Failure", code);
-    });
-    let stream2 = spawn('raspistill', ['-t', '0', '-n', '-o', '-', '-w', 100, '-h', 100, '-rgb']);
+    //streamer = spawn('raspivid', ['-t', '0', '-n', '-o', '-', '-w', 480, '-h', 480, '-fps', 6, '-pf', 'baseline']);
+    //streamer.on("exit", function(code){
+    //  console.log("Failure", code);
+    //});
+
+    let stream2 = spawn('raspistill', ['-t', '50000', '-tl', 200, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 300, '-l', 'latest.jpg']);
     stream2.on("exit", function(code){
       console.log("Failure", code);
     });
+    let buff;
+    let buff2;
+    setInterval(() => {
+      buff = cv.imread('/home/pi/Desktop/fake/some.jpg');
+      buff2 = buff.threshold(200,255, cv.THRESH_BINARY);
+      client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
+  }, 200)
+
     stream2.stdout.on('data', (data) => {
      console.log('data', data);
     })
 
-    var readStream = streamer.stdout.pipe(new Splitter(NALseparator));
-	readStream.on('data', (data) => {
-	  client.binary(true).emit('vid', Buffer.concat([NALseparator, data]))
-	});
+    //var readStream = streamer.stdout.pipe(new Splitter(NALseparator));
+	//readStream.on('data', (data) => {
+	  //client.binary(true).emit('vid', Buffer.concat([NALseparator, data]))
+	//});
   });
   client.on('disconnect', () => {
     console.log('clearing intervals')
@@ -139,6 +148,12 @@ io.on('connection', (client) => {
     clearInterval(tiltInterval);
   })
   client.on('setTarget', (target) => {
+    if (target.leftRPM) {
+      
+    } else if (target.rightRPM) {
+
+    }
+    target
     console.log('setting target', target)
     controller.target = target
     console.log('new target', controller.target)
@@ -147,3 +162,32 @@ io.on('connection', (client) => {
   client.on('getTarget', () => {
     client.emit('target', controller.target)
   })
+  client.on('setGains', (gains) => {	
+
+    console.log('gains', gains);	
+
+    controller.kp = Number(gains.kp);	
+
+    controller.ki = Number(gains.ki);	
+
+    controller.kd = Number(gains.kd);	
+
+    client.emit('gains', {kp: controller.kp, ki: controller.ki, kd: controller.kd})	
+
+   })	
+
+  client.on('getGains', () => {	
+
+    client.emit('gains', {kp: controller.kp, ki: controller.ki, kd: controller.kd})	
+
+  })	
+
+});	
+
+server.listen(5000);	
+
+ global.log = function(value) {	
+
+  io.emit('log', value);	
+
+}
