@@ -1,12 +1,11 @@
 class Controller {
   constructor() {
-    this = {
-    target: 0,
-    error: 0,
-    prevVal: 0,
-    kp: 0,
-    kd: 0,
-    ki: 0,
+    this.target = 0;
+    this.error = 0;
+    this.prevVal = 0;
+    this.kp = 0;
+    this.kd = 0;
+    this.ki = 0;
     }
   }
 
