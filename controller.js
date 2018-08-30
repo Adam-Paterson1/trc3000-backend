@@ -7,7 +7,6 @@ class Controller {
     this.kd = 0;
     this.ki = 0;
     }
-  }
 
   run (currVal) {
     let newErr = this.target - currVal;
