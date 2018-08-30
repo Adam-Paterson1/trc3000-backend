@@ -38,7 +38,7 @@ io.on('connection', (client) => {
         ml.pwm = 220;
       }
       client.emit('tilt', {leftRPM: ml.rpm, leftErr: error, leftPWM: ml.pwm})
-      ml.pwmWrite(pwm);
+      ml.pwmWrite();
     }, timerPeriod)
   });
   client.on('subscribeToImage', () => {

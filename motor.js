@@ -39,15 +39,13 @@ class Motor {
     this.rpm = this.currPulses/pulsesPerTurn / (timerPeriod * 1.667e-5);
     this.currPulses = 0;
   }
-  pwmWrite(pwm) {
-    this.pwm = pwm;
-    if (pwm > 0) {
-      this.out1.pwmWrite(pwm);
+  pwmWrite() {
+    if (this.pwm > 0) {
+      this.out1.pwmWrite(this.pwm);
       this.out2.digitalWrite(0);
     } else {
-      this.out2.pwmWrite(pwm);
+      this.out2.pwmWrite(this.pwm);
       this.out1.digitalWrite(0);
-
     }
   }
 }
