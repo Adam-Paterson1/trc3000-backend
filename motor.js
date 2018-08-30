@@ -33,8 +33,6 @@ class Motor {
     this.pwm = 0;
     this.out1.pwmFrequency(20000);
     this.out2.pwmFrequency(20000);
-    this.out1.pwmWrite(pwm);
-    this.out2.digitalWrite(0);
   }
 
   calcRpm(timerPeriod) {
