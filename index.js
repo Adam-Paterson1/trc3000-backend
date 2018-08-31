@@ -9,7 +9,7 @@ const Motor = require('./motor');
 const cv = require('opencv4nodejs');
 
 const timerPeriod = 100;
-const imagePeriod = 200;
+const imagePeriod = 80;
 
 const ml = new Motor([2,3], [20, 21]);
 // const mr = new Motor([20, 21], [2,3]);
@@ -75,8 +75,6 @@ io.on('connection', (client) => {
     } else if (target.rightRPM) {
       cr.target = target.rightRPM;
       client.emit('target', {rightRPM: cr.target})
-    } else if (target.Tilt) {
-      client.emit('target', {Tilt: target.Tilt})
     }
     console.log('setting target', target)
   })
