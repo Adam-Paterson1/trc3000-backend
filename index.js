@@ -71,6 +71,8 @@ io.on('connection', (client) => {
     } else if (target.rightRPM) {
       cr.target = target.rightRPM;
       client.emit('target', {rightRPM: cr.target})
+    } else if (target.Tilt) {
+      client.emit('target', {Tilt: target.Tilt})
     }
     console.log('setting target', target)
   })
