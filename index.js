@@ -21,6 +21,7 @@ app.use(express.static(path.join(__dirname, '../trc3000-frontend/build')))
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
+let imgStream;
 
 io.on('connection', (client) => {
   let tiltInterval;
@@ -43,7 +44,7 @@ io.on('connection', (client) => {
   });
   client.on('subscribeToImage', () => {
     console.log('subbing to vid');
-    let imgStream = spawn('raspistill', ['-t', '50000', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 300, '-l', 'latest.jpg']);
+    imgStream = spawn('raspistill', ['-t', '50000', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 300]);
     imgStream.on("exit", function(code){
       console.log("Failure", code);
     });
@@ -61,6 +62,9 @@ io.on('connection', (client) => {
   });
   client.on('disconnect', () => {
     console.log('clearing intervals')
+    if (imgStream) {
+      imgStream.kill('SIGINT');
+    }
     clearInterval(tiltInterval);
   })
   client.on('setTarget', (target) => {
