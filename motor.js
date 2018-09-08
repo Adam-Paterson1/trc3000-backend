@@ -21,11 +21,11 @@ class Motor {
       alert: true
     });
     this.enc1.on('alert', (level, tick) => {
-      currPulses++;
+      this.currPulses++;
     });
     // Add in state machine in here ie: level = 1, and level for other thing is 0 so double switch
     this.enc2.on('alert', (level, tick) => {
-      currPulses++;
+      this.currPulses++;
     });
     // Initial values
     this.currPulses = 0;
@@ -41,11 +41,11 @@ class Motor {
   }
   pwmWrite() {
     if (this.pwm > 0) {
-      this.out1.pwmWrite(this.pwm);
-      this.out2.digitalWrite(0);
+      this.out1.pwmWrite(255-this.pwm);
+      this.out2.digitalWrite(1);
     } else {
-      this.out2.pwmWrite(this.pwm);
-      this.out1.digitalWrite(0);
+      this.out2.pwmWrite(255-this.pwm);
+      this.out1.digitalWrite(1);
     }
   }
 }
