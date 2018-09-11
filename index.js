@@ -143,12 +143,15 @@ io.on('connection', (client) => {
 
     cl.kp = Number(gains.kp);
     cr.kp = Number(gains.kp);
+    cTilt.kp = Number(gains.kp);
 
     cl.ki = Number(gains.ki);
     cr.ki = Number(gains.ki);
+    cTilt.ki = Number(gains.ki);
 
     cl.kd = Number(gains.kd);
     cr.kd = Number(gains.kd);
+    cTilt.kd = Number(gains.kd);
 
     client.emit('gains', {kp: cl.kp, ki: cl.ki, kd: cl.kd})
    })
