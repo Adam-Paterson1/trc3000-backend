@@ -9,7 +9,7 @@ const Motor = require('./motor');
 const cv = require('opencv4nodejs');
 
 const timerPeriod = 20;
-const imagePeriod = 80;
+const imagePeriod = 200;
 
 const cl = new Controller();
 const cr = new Controller();
@@ -64,16 +64,58 @@ io.on('connection', (client) => {
   client.on('subscribeToImage', () => {
     console.log('subbing to vid');
 
-    imgStream = spawn('raspistill', ['-t', '500000', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 300]);
+    imgStream = spawn('raspistill', ['-t', '500000', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200]);
     imgStream.on("exit", function(code){
      console.log("Failure", code);
     });
     let buff;
     let buff2;
+
+const skinColorUpper = hue => new cv.Vec(hue, 235, 235);
+const skinColorLower = hue => new cv.Vec(hue, 20, 20);
+const blue = new cv.Vec(255, 0, 0);
+const green = new cv.Vec(0, 255, 0);
+const red = new cv.Vec(0, 0, 255);
+const makeHandMask = (img) => {
+  // filter by skin color
+  const imgHLS = img.cvtColor(cv.COLOR_BGR2HSV);
+  const rangeMask = imgHLS.inRange(skinColorLower(40), skinColorUpper(60));
+
+  // remove noise
+  const blurred = rangeMask.blur(new cv.Size(10, 10));
+  const thresholded = blurred.threshold(200, 255, cv.THRESH_BINARY);
+
+  return thresholded;
+};
+const getHandContour = (handMask) => {
+  const mode = cv.RETR_EXTERNAL;
+  const method = cv.CHAIN_APPROX_SIMPLE;
+  const contours = handMask.findContours(mode, method);
+  // largest contour
+  return contours.sort((c0, c1) => c1.area - c0.area)[0];
+};
+
     setInterval(() => {
-     buff = cv.imread('/home/pi/Desktop/fake/some.jpg');
-     buff2 = buff.threshold(200,255, cv.THRESH_BINARY);
-     client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
+     cv.imreadAsync('/home/pi/Desktop/fake/some.jpg', (err, buff) => {
+//const hsvImg = buff.cvtColor(cv.COLOR_BGR2HSV);
+     const handMask = makeHandMask(buff);
+     const handContour = getHandContour(handMask);
+     const blueMat = new cv.Mat(100, 100, cv.CV_8UC3, [60, 255, 255]);
+     buff2 = buff.copy();
+     buff2 = buff2.cvtColor(cv.COLOR_HSV2BGR);
+     if (handContour) {
+     buff2.drawContours(
+    [handContour],
+    blue,
+    { thickness: 2 }
+  );
+}
+     //buff2 = buff.threshold(200,255, cv.THRESH_BINARY);
+     client.emit('image', [cv.imencode('.jpg', buff2).toString('base64')]);
+
+});
+     
+     //client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
     }, imagePeriod)
 
     imgStream.stdout.on('data', (data) => {
