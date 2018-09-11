@@ -34,7 +34,6 @@ class Motor {
     this.out2.pwmFrequency(20000);
     this.timerPeriod = timerPeriod * 1.667e-5;
     this.controller = controller;
-    this.error = 0;
   }
 
   calcRpm() {
@@ -42,8 +41,8 @@ class Motor {
     this.currPulses = 0;
   }
 
-  pwmWrite() {
-    this.pwm = Math.round(Math.min( Math.max( -220, this.pwm + this.error), 220));
+  pwmWrite(error) {
+    this.pwm = Math.round(Math.min( Math.max( -220, this.pwm + error), 220));
     if (this.pwm >= 0) {
       this.out1.pwmWrite(this.pwm);
       this.out2.digitalWrite(0);
@@ -51,15 +50,6 @@ class Motor {
       this.out2.pwmWrite(Math.abs(this.pwm));
       this.out1.digitalWrite(0);
     }
-  }
-
-  run() {
-    //Read
-    this.calcRpm()
-    //Control
-    this.error = this.controller.run(this.rpm);
-    //Update
-    this.pwmWrite()
   }
 
 }
