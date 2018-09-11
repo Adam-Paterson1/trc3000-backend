@@ -78,8 +78,8 @@ io.on('connection', (client) => {
         leftErr = tiltErr + bearingErr + vidErr;
         rightErr = tiltErr - bearingErr - vidErr;
 
-        //ml.pwmWrite(leftErr);
-        //mr.pwmWrite(rightErr);
+        ml.pwmWrite(leftErr);
+        mr.pwmWrite(rightErr);
         //Note bearing is being sent as left RPM.
         client.emit('tilt', {Tilt: gTilt, leftRPM: gBearing, leftErr: leftErr, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr, rightPWM: mr.pwm})
 
@@ -103,9 +103,9 @@ io.on('connection', (client) => {
     let buff;
     let buff2;
 
-const skinColorUpper = hue => new cv.Vec(hue, 235, 235);
+const skinColorUpper = hue => new cv.Vec(hue, 255, 255);
 
-const skinColorLower = hue => new cv.Vec(hue, 20, 20);
+const skinColorLower = hue => new cv.Vec(hue, 100, 30);
 const blue = new cv.Vec(255, 0, 0);
 
 const green = new cv.Vec(0, 255, 0);
@@ -117,7 +117,7 @@ const makeHandMask = (img) => {
 
   const imgHLS = img.cvtColor(cv.COLOR_BGR2HSV);
 
-  const rangeMask = imgHLS.inRange(skinColorLower(40), skinColorUpper(80));
+  const rangeMask = imgHLS.inRange(skinColorLower(25), skinColorUpper(50));
 
 
 
@@ -162,7 +162,8 @@ const getHandContour = (handMask) => {
       { thickness: 2 }
       );
       let M = handContour.moments();
-	let cx = Math.round(M.m10/M.m00);
+	let cx = Math.round(M.m10/M.m00);
+
         let cy = Math.round(M.m01/M.m00);
         console.log('cx', cx);
      }
