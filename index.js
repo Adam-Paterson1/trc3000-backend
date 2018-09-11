@@ -13,6 +13,10 @@ const imagePeriod = 200;
 
 const cl = new Controller();
 const cr = new Controller();
+const cTilt = new Controller();
+const cBearing = new Controller();
+const cVideo = new Controller();
+
 //B is left
 const ml = new Motor([19,26], [27, 17], timerPeriod, cl);
 const mr = new Motor([16, 20], [23,24], timerPeriod, cr);
@@ -23,6 +27,8 @@ const io = require('socket.io')(server);
 
 let imgStream, child;
 let gTilt = 0;
+let gBearing = 0;
+let gVideo = 0;
 
 io.on('connection', (client) => {
   let tiltInterval;
@@ -30,27 +36,53 @@ io.on('connection', (client) => {
     console.log('client is subscribing to tilt with interval', timerPeriod);
   //let time = Date.now();
   //let time2;
-    if (!tiltInterval) {
-      tiltInterval = setInterval(() => {
-        //time2 = Date.now()
-        //console.log(time2 - time);
-        //time = time2;
-        ml.run()
-        mr.run()
-        client.emit('tilt', {Tilt: gTilt, leftRPM: ml.rpm, leftErr: ml.error, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: mr.error, rightPWM: mr.pwm})
-      }, timerPeriod)
-    }
+    // if (!tiltInterval) {
+    //   tiltInterval = setInterval(() => {
+    //     //time2 = Date.now()
+    //     //console.log(time2 - time);
+    //     //time = time2;
+    //   }, timerPeriod)
+    // }
 
     if (!child) {
       child = spawn('minimu9-ahrs', ['--output', 'euler', '-b', '/dev/i2c-1'], {cwd: '/home/pi/Documents/trc3000/trc3000-backend', shell: true});
+      let time1 = Date.now();
+      let time2, dt;
+      let tiltErr, bearingErr, vidErr;
+      let leftErr, rightErr;
       child.stdout.on('data', function(data) {
-        let datastr = parseFloat(data.toString().split(' ').filter(el => el)[1])
-        if (datastr > 90) {
-          datastr = 180 - datastr
-        } else if (datastr < -90) {
-          datastr = -180 - datastr
+        //Minimu new reading make timestamp
+        time2 = Date.now()
+        dt = time2 - time1;
+        time1 = time2;
+
+        //Clean it up and get bearing and tilt
+        let nums = data.toString().split(' ').filter(el => el);
+        gBearing = parseFloat(nums[0]);
+        gTilt = parseFloat(nums[1]);
+        if (gTilt > 90) {
+          gTilt = 180 - gTilt
+        } else if (gTilt < -90) {
+          gTilt = -180 - gTilt
         }
-        gTilt = datastr;
+
+        //Run all of our controllers
+        // Tilt error should be positive if it needs to drive forward and neg for back
+        tiltErr = cTilt.run(gTilt, dt);
+        // Bearing error should be positive to turn right NOT SET UP YET
+        bearingErr = cBearing.run(gBearing, dt);
+        // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
+        vidErr = cVideo.run(gVideo, dt);
+
+        //Combine errors currently not doing any weighting
+        leftErr = tiltErr + bearingErr + vidErr;
+        rightErr = tiltErr - bearingErr - vidErr;
+
+        //ml.pwmWrite(leftErr);
+        //mr.pwmWrite(rightErr);
+        //Note bearing is being sent as left RPM.
+        client.emit('tilt', {Tilt: gTilt, leftRPM: gBearing, leftErr: leftErr, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr, rightPWM: mr.pwm})
+
       });
       child.stderr.on('data', function(data) {
         console.log('stderr: ' + data);
@@ -140,7 +172,8 @@ const getHandContour = (handMask) => {
       cr.target = target.rightRPM;
       client.emit('target', {rightRPM: cr.target})
     } else if (target.Tilt != null) {
-      client.emit('target', {Tilt: target.Tilt})
+      cTilt.target = target.Tilt;
+      client.emit('target', {Tilt: cTilt.target})
     }
     console.log('setting target', target)
   })
