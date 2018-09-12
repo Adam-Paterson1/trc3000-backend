@@ -16,7 +16,8 @@ const cr = new Controller();
 const cTilt = new Controller();
 const cBearing = new Controller();
 const cVideo = new Controller();
-
+cVideo.target = 150;
+cVideo.kp = 0.3;
 //B is left
 const ml = new Motor([19,26], [27, 17], timerPeriod, cl);
 const mr = new Motor([16, 20], [23,24], timerPeriod, cr);
@@ -70,13 +71,25 @@ io.on('connection', (client) => {
         // Tilt error should be positive if it needs to drive forward and neg for back
         tiltErr = cTilt.run(gTilt, dt);
         // Bearing error should be positive to turn right NOT SET UP YET
-        bearingErr = cBearing.run(gBearing, dt);
+        bearingErr = 0;//cBearing.run(gBearing, dt);
         // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
         vidErr = cVideo.run(gVideo, dt);
-
+        if (isNaN(vidErr)) {
+          vidErr = 0;
+}
+        if (Math.abs(vidErr) > 20) {
+            if(vidErr > 0) {
+              vidErr -= 20; 
+            } else {
+             vidErr += 20;
+            }
+         } else {
+           vidErr = 0;
+         }
+        //console.log('v', vidErr)
         //Combine errors currently not doing any weighting
-        leftErr = tiltErr + bearingErr + vidErr;
-        rightErr = tiltErr - bearingErr - vidErr;
+        leftErr = tiltErr - bearingErr - vidErr;
+        rightErr = tiltErr + bearingErr + vidErr;
 
         ml.pwmWrite(leftErr);
         mr.pwmWrite(rightErr);
@@ -165,7 +178,11 @@ const getHandContour = (handMask) => {
 	let cx = Math.round(M.m10/M.m00);
 
         let cy = Math.round(M.m01/M.m00);
-        console.log('cx', cx);
+        gVideo = cx;
+        if (isNaN(gVideo)) {
+         gVideo = 0;
+}
+        //console.log('cx', cx);
      }
      //buff2 = buff.threshold(200,255, cv.THRESH_BINARY);
      //client.emit('image', [cv.imencode('.jpg', buff2).toString('base64')]);
@@ -227,7 +244,18 @@ client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode(
     client.emit('gains', {kp: cl.kp, ki: cl.ki, kd: cl.kd})
   })
   client.on('stop', () => {
-    clearInterval(tiltInterval);
+    //clearInterval(tiltInterval);
+    if (child) {
+      child.kill('SIGINT');
+    }
+    while (1) {
+    cl.target = 0;
+    cr.target = 0;
+    ml.pwm = 0;
+    mr.pwm = 0;
+    ml.pwmWrite()
+    mr.pwmWrite()
+}
     cl.target = 0;
     cr.target = 0;
     ml.pwm = 0;

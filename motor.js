@@ -42,15 +42,19 @@ class Motor {
   }
 
   pwmWrite(error) {
-    this.pwm = Math.round(Math.min( Math.max( -220, this.pwm + error), 220));
-    if (this.pwm >= 0) {
+    if (!isNaN(error)) {
+    this.pwm = Math.round(Math.min( Math.max( -120, this.pwm + error), 120));
+    if (this.pwm > 0) {
+      //console.log('pwm', this.pwm);
       this.out1.pwmWrite(this.pwm);
       this.out2.digitalWrite(0);
     } else {
+      //console.log('pwm2', Math.abs(this.pwm));
       this.out2.pwmWrite(Math.abs(this.pwm));
       this.out1.digitalWrite(0);
     }
   }
+}
 
 }
 
