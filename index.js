@@ -69,11 +69,11 @@ io.on('connection', (client) => {
 
         //Run all of our controllers
         // Tilt error should be positive if it needs to drive forward and neg for back
-        tiltErr = cTilt.run(gTilt, dt);
+        tiltErr = cTilt.run(-gTilt, dt);
         // Bearing error should be positive to turn right NOT SET UP YET
         bearingErr = 0;//cBearing.run(gBearing, dt);
         // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
-        vidErr = cVideo.run(gVideo, dt);
+        vidErr = 0;//cVideo.run(gVideo, dt);
         if (isNaN(vidErr)) {
           vidErr = 0;
 }
@@ -253,8 +253,8 @@ client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode(
     cr.target = 0;
     ml.pwm = 0;
     mr.pwm = 0;
-    ml.pwmWrite()
-    mr.pwmWrite()
+    ml.pwmWrite(0)
+    mr.pwmWrite(0)
 }
     cl.target = 0;
     cr.target = 0;
