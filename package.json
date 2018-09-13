@@ -8,6 +8,7 @@
     "nodemon": "^1.18.3",
     "opencv4nodejs": "^4.7.2",
     "raspi-live": "^1.1.0",
+    "serialport": "^7.0.2",
     "socket.io": "^2.1.1",
     "stream-split": "^1.1.0"
   },
