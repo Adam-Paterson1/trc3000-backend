@@ -34,9 +34,9 @@ const cv = require('opencv4nodejs');
 
 //const parser = new Readline()
 
-port.pipe(parser)
+//port.pipe(parser)
 
-parser.on('data', console.log)
+//parser.on('data', console.log)
 //port.on('data', (data) => {
 //  console.log('d', data);
 //})
@@ -54,7 +54,7 @@ const cTilt = new Controller();
 const cBearing = new Controller();
 const cVideo = new Controller();
 cVideo.target = 150;
-cVideo.kp = 0.3;
+cVideo.kp = 1;
 //B is left
 const ml = new Motor([19,26], [27, 17], timerPeriod, cl);
 const mr = new Motor([16, 20], [23,24], timerPeriod, cr);
@@ -114,19 +114,19 @@ io.on('connection', (client) => {
         if (isNaN(vidErr)) {
           vidErr = 0;
 }
-        if (Math.abs(vidErr) > 20) {
-            if(vidErr > 0) {
-              vidErr -= 20; 
-            } else {
-             vidErr += 20;
-            }
-         } else {
-           vidErr = 0;
-         }
+        //if (Math.abs(vidErr) > 20) {
+          //  if(vidErr > 0) {
+            //  vidErr -= 20; 
+            //} else {
+            // vidErr += 20;
+           // }
+         //} else {
+         //  vidErr = 0;
+        // }
         //console.log('v', vidErr)
         //Combine errors currently not doing any weighting
-        leftErr = tiltErr - bearingErr - vidErr;
-        rightErr = tiltErr + bearingErr + vidErr;
+        leftErr = tiltErr - bearingErr + vidErr;
+        rightErr = tiltErr + bearingErr - vidErr;
 
         ml.pwmWrite(leftErr);
         mr.pwmWrite(rightErr);
@@ -153,9 +153,9 @@ io.on('connection', (client) => {
     let buff;
     let buff2;
 
-const skinColorUpper = hue => new cv.Vec(hue, 255, 255);
+const skinColorUpper = hue => new cv.Vec(hue, 255, 225);
 
-const skinColorLower = hue => new cv.Vec(hue, 100, 30);
+const skinColorLower = hue => new cv.Vec(hue, 100, 15);
 const blue = new cv.Vec(255, 0, 0);
 
 const green = new cv.Vec(0, 255, 0);
@@ -167,7 +167,7 @@ const makeHandMask = (img) => {
 
   const imgHLS = img.cvtColor(cv.COLOR_BGR2HSV);
 
-  const rangeMask = imgHLS.inRange(skinColorLower(25), skinColorUpper(50));
+  const rangeMask = imgHLS.inRange(skinColorLower(40), skinColorUpper(60));
 
 
 
