@@ -43,16 +43,24 @@ class Motor {
 
   pwmWrite(error) {
     if (!isNaN(error)) {
-    this.pwm = Math.round(Math.min( Math.max( -220, error), 220));
-    if (this.pwm > 0) {
-      //console.log('pwm', this.pwm);
-      this.out1.pwmWrite(this.pwm);
-      this.out2.digitalWrite(0);
-    } else {
-      //console.log('pwm2', Math.abs(this.pwm));
-      this.out2.pwmWrite(Math.abs(this.pwm));
-      this.out1.digitalWrite(0);
-    }
+      if (error > 0) {
+        error += 50;
+      } else if (error < 0) {
+        error -= 50;
+      }
+      this.pwm = Math.round(Math.min( Math.max( -220, error), 220));
+      if (this.pwm > 0) {
+        //console.log('pwm', this.pwm);
+        this.out1.pwmWrite(this.pwm);
+        this.out2.digitalWrite(0);
+      } else if (this.pwm < 0) {
+        //console.log('pwm2', Math.abs(this.pwm));
+        this.out2.pwmWrite(Math.abs(this.pwm));
+        this.out1.digitalWrite(0);
+      } else {
+        this.out1.digitalWrite(0);
+        this.out2.digitalWrite(0);
+      }
   }
 }
 
