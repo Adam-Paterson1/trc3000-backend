@@ -15,7 +15,6 @@ const cv = require('opencv4nodejs');
 //})
 
 //const parser = new Readline()
-
 //port.pipe(parser)
 
 //parser.on('data', console.log)
@@ -32,8 +31,8 @@ const cv = require('opencv4nodejs');
 const blue = new cv.Vec(255, 0, 0);
 const green = new cv.Vec(0, 255, 0);
 const red = new cv.Vec(0, 0, 255);
-let colorUpper = new cv.Vec(26, 255, 255);
-let colorLower = new cv.Vec(36, 100, 30);
+let colorUpper = new cv.Vec(28, 255, 220);
+let colorLower = new cv.Vec(22, 150, 0);
 
 const makeHandMask = (img) => {
   // filter by skin color
@@ -56,7 +55,7 @@ const getHandContour = (handMask) => {
 
 
 const timerPeriod = 20;
-const imagePeriod = 100;
+const imagePeriod = 200;
 
 const cl = new Controller();
 const cr = new Controller();
@@ -127,7 +126,8 @@ io.on('connection', (client) => {
         //Combine errors currently not doing any weighting
         leftErr = tiltErr - bearingErr + vidErr;
         rightErr = tiltErr + bearingErr - vidErr;
-
+	//ml.pwmWrite(100);
+        //mr.pwmWrite(100);
         ml.pwmWrite(leftErr);
         mr.pwmWrite(rightErr);
         //Note bearing is being sent as left RPM.
@@ -145,6 +145,7 @@ io.on('connection', (client) => {
   });
   client.on('subscribeToImage', () => {
     console.log('subbing to vid');
+
     imgStream = spawn('raspistill', ['-t', '500000', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200]);
     imgStream.on("exit", function(code){
      console.log("Failure", code);
@@ -180,23 +181,23 @@ io.on('connection', (client) => {
     // })
   });
   client.on('subscribeToThresh', () => {
-    const mat1 = new cv.Mat(100, 100, cv.CV_8UC3, colorLower);
+    const mat1 = new cv.Mat(100, 100, cv.CV_8UC3, [colorLower.x, colorLower.y, colorLower.z]);
     const mat2 = new cv.Mat(100, 100, cv.CV_8UC3, colorUpper);
     const mat3 = mat1.cvtColor(cv.COLOR_HSV2BGR);
     const mat4 = mat2.cvtColor(cv.COLOR_HSV2BGR);
-    const d1 = cv.imencode('.jpg', mat3).toString('base64');
-    const d2 = cv.imencode('.jpg', mat4).toString('base64');
+    const d1 = cv.imencode('.jpg', mat1).toString('base64');
+    const d2 = cv.imencode('.jpg', mat2).toString('base64');
 
-    client.emit('thresh', {0: d1, 1: d2, lower: colorLower, upper: colorUpper})
+    client.emit('thresh', {0: d1, 1: d2, lower: [colorLower.x, colorLower.y, colorLower.z], upper: [colorUpper.x, colorUpper.y, colorUpper.z]})
   });
   client.on('setHSV', (data) => {
     const lower = data.lower;
     const upper = data.upper;
     if (lower) {
-      colorLower = new cv.Vec(lower[0], lower[1], lower[2])
+      colorLower = new cv.Vec(Number(lower[0]), Number(lower[1]), Number(lower[2]))
     }
     if (upper) {
-      colorUpper = new cv.Vec(upper[0], upper[1], upper[2])
+      colorUpper = new cv.Vec(Number(upper[0]), Number(upper[1]), Number(upper[2]))
     }
     const mat1 = new cv.Mat(100, 100, cv.CV_8UC3, colorLower);
     const mat2 = new cv.Mat(100, 100, cv.CV_8UC3, colorUpper);
@@ -205,7 +206,7 @@ io.on('connection', (client) => {
     const d1 = cv.imencode('.jpg', mat3).toString('base64');
     const d2 = cv.imencode('.jpg', mat4).toString('base64');
 
-    client.emit('thresh', {0: d1, 1: d2, lower: colorLower, upper: colorUpper})
+    client.emit('thresh', {0: d1, 1: d2, lower: [colorLower.x, colorLower.y, colorLower.z], upper: [colorUpper.x, colorUpper.y, colorUpper.z]})
   });
 
   client.on('disconnect', () => {
