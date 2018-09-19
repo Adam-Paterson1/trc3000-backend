@@ -58,7 +58,13 @@ const timerPeriod = 20;
 const imagePeriod = 200;
 
 const cl = new Controller();
+cl.kp = 1;
+//cl.ki = 1;
+cl.kd = 1;
 const cr = new Controller();
+cr.kp = 1;
+//cr.ki = 1;
+cr.kd = 1;
 const cTilt = new Controller();
 const cBearing = new Controller();
 const cVideo = new Controller();
@@ -96,6 +102,7 @@ io.on('connection', (client) => {
       let time2, dt;
       let tiltErr, bearingErr, vidErr;
       let leftErr, rightErr;
+      let leftErr2, rightErr2;
       child.stdout.on('data', function(data) {
         //Minimu new reading make timestamp
         time2 = Date.now()
@@ -126,12 +133,19 @@ io.on('connection', (client) => {
         //Combine errors currently not doing any weighting
         leftErr = tiltErr - bearingErr + vidErr;
         rightErr = tiltErr + bearingErr - vidErr;
-	//ml.pwmWrite(100);
-        //mr.pwmWrite(100);
-        ml.pwmWrite(leftErr);
-        mr.pwmWrite(rightErr);
+        cl.target = leftErr;
+        cr.target = rightErr;
+
+        ml.calcRpm(dt);
+        mr.calcRpm(dt);
+        leftErr2 = cl.run(ml.rpm, dt);
+	rightErr2 = cr.run(mr.rpm, dt);
+        ml.pwmWrite(leftErr2);
+        mr.pwmWrite(rightErr2);
         //Note bearing is being sent as left RPM.
-        client.emit('tilt', {Tilt: gTilt, leftRPM: gBearing, leftErr: leftErr, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr, rightPWM: mr.pwm})
+        client.emit('target', {leftRPM: cl.target})
+        client.emit('target', {rightRPM: cr.target})
+        client.emit('tilt', {Tilt: gTilt, leftRPM: ml.rpm, leftErr: leftErr, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr, rightPWM: mr.pwm})
 
       });
       child.stderr.on('data', function(data) {
@@ -238,23 +252,23 @@ io.on('connection', (client) => {
   client.on('setGains', (gains) => {
     console.log('gains', gains);
 
-    cl.kp = Number(gains.kp);
-    cr.kp = Number(gains.kp);
+    //cl.kp = Number(gains.kp);
+    //cr.kp = Number(gains.kp);
     cTilt.kp = Number(gains.kp);
 
-    cl.ki = Number(gains.ki);
-    cr.ki = Number(gains.ki);
+    //cl.ki = Number(gains.ki);
+    //cr.ki = Number(gains.ki);
     cTilt.ki = Number(gains.ki);
 
-    cl.kd = Number(gains.kd);
-    cr.kd = Number(gains.kd);
+   //cl.kd = Number(gains.kd);
+    //cr.kd = Number(gains.kd);
     cTilt.kd = Number(gains.kd);
 
-    client.emit('gains', {kp: cl.kp, ki: cl.ki, kd: cl.kd})
+    client.emit('gains', {kp: cTilt.kp, ki: cTilt.ki, kd: cTilt.kd})
    })
 
   client.on('getGains', () => {
-    client.emit('gains', {kp: cl.kp, ki: cl.ki, kd: cl.kd})
+    client.emit('gains', {kp: cTilt.kp, ki: cTilt.ki, kd: cTilt.kd})
   })
   client.on('stop', () => {
     //clearInterval(tiltInterval);
@@ -269,12 +283,6 @@ io.on('connection', (client) => {
       ml.pwmWrite(0)
       mr.pwmWrite(0)
     } 
-    cl.target = 0;
-    cr.target = 0;
-    ml.pwm = 0;
-    mr.pwm = 0;
-    ml.pwmWrite()
-    mr.pwmWrite()
     client.emit('target', {leftRPM: cl.target, rightRPM: cr.target, Tilt: 0})
   })
 });

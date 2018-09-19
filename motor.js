@@ -36,8 +36,8 @@ class Motor {
     this.controller = controller;
   }
 
-  calcRpm() {
-    this.rpm = this.currPulses/pulsesPerTurn / this.timerPeriod;
+  calcRpm(period) {
+    this.rpm = this.currPulses/pulsesPerTurn / (period* 1.667e-5);
     this.currPulses = 0;
   }
 
@@ -54,7 +54,7 @@ class Motor {
         this.out1.pwmWrite(this.pwm);
         this.out2.digitalWrite(0);
       } else if (this.pwm < 0) {
-        //console.log('pwm2', Math.abs(this.pwm));
+        //console.log('pwm2', Math.abs(this.pwm));`
         this.out2.pwmWrite(Math.abs(this.pwm));
         this.out1.digitalWrite(0);
       } else {
