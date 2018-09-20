@@ -19,13 +19,7 @@ class Motor {
       mode: Gpio.INPUT,
       alert: true
     });
-    this.enc1.on('alert', (level, tick) => {
-      this.currPulses++;
-    });
-    // Add in state machine in here ie: level = 1, and level for other thing is 0 so double switch
-    this.enc2.on('alert', (level, tick) => {
-      this.currPulses++;
-    });
+
     // Initial values
     this.currPulses = 0;
     this.rpm = 0;
@@ -34,6 +28,39 @@ class Motor {
     this.out2.pwmFrequency(20000);
     this.timerPeriod = timerPeriod * 1.667e-5;
     this.controller = controller;
+    this.levelA = 0;
+    this.levelB = 0;
+
+    this.enc1.on('alert', (level, tick) => {
+      this.currPulses++;
+      //Pulses need to be subtracted here if dir swapped?
+      //Going forward and sloing down all good
+      //Forward - stop - back
+      if (this.levelB == 0) {
+        //10 -> 00
+        if (this.levelA == 1 && level == 0) {
+          this.direction = -1;
+        } //00 -> 10
+        else if (this.levelA == 0 && level == 1) {
+          this.direction = 1;
+        }
+      } else {
+        //01 -> 11
+        if (this.levelA == 0 && level == 1) {
+          this.direction = -1;
+        } //11 -> 01
+        else if (this.levelA == 1 && level == 0) {
+          this.direction = 1;
+        }
+      }
+      this.levelA = level;
+    });
+    // Add in state machine in here ie: level = 1, and level for other thing is 0 so double switch
+    this.enc2.on('alert', (level, tick) => {
+      this.currPulses++;
+      this.levelB = level;
+    });
+
   }
 
   calcRpm(period) {

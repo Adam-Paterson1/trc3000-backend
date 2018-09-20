@@ -139,9 +139,48 @@ io.on('connection', (client) => {
         ml.calcRpm(dt);
         mr.calcRpm(dt);
         leftErr2 = cl.run(ml.rpm, dt);
-	rightErr2 = cr.run(mr.rpm, dt);
+        rightErr2 = cr.run(mr.rpm, dt);
+        //Speed error = want to change motor speed
+        leftErr2 += ml.pwm;
+        rightErr2 += mr.pwm;
         ml.pwmWrite(leftErr2);
         mr.pwmWrite(rightErr2);
+        
+
+        //Same tilt = no output
+        //Same speed = maintain output
+        //Speed err -> motor.drive with curr + err
+        //Tilt err -> straight into setting target for speed
+        // curr at 20 and falling forward.
+        // leftErr = 40 to drive fwd - tilt controller drive fwd at 40rpm
+        // target = 40
+        // new error = 40-20 rpm figures out it needs to speed up so +ve error
+        // err = 200
+        // pi gets more juice
+
+        // curr at 40 and falling back.
+        // leftErr = 20 to drive back - tilt controller drive back at 40rpm
+        // target = 20
+        // new error = 20-40 rpm figures out it needs to speed up so +ve error
+        // err = -20
+        // indicates we want motor to slow by 20 not reverse to 20
+        // pi gets less juice
+
+        // curr at 40 and falling back.
+        // leftErr = -40 to drive back - tilt controller drive back at 40rpm
+        // target = -40
+        // new error = -40-40 rpm figures out it needs to speed up so +ve error
+        // err = -80
+        // pi gets more juice
+
+        // curr at -40 and falling fwd.
+        // leftErr = 40 to drive fwd - tilt controller drive fwd at 40rpm
+        // target = 40
+        // new error = 40--40 rpm figures out it needs to speed up so +ve error
+        // err = -80
+        // pi gets more juice
+        // pi controller for speed to pwm
+
         //Note bearing is being sent as left RPM.
         client.emit('target', {leftRPM: cl.target})
         client.emit('target', {rightRPM: cr.target})
