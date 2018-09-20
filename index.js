@@ -141,8 +141,8 @@ io.on('connection', (client) => {
         leftErr2 = cl.run(ml.rpm, dt);
         rightErr2 = cr.run(mr.rpm, dt);
         //Speed error = want to change motor speed
-        leftErr2 += ml.pwm;
-        rightErr2 += mr.pwm;
+        leftErr2 += (ml.pwm );
+        rightErr2 += (mr.pwm);
         ml.pwmWrite(leftErr2);
         mr.pwmWrite(rightErr2);
         
