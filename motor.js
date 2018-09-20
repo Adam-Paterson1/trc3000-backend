@@ -3,7 +3,7 @@ const Gpio = require('pigpio').Gpio;
 const pulsesPerTurn = 1800
 
 class Motor {
-  constructor(pwmPins, encoderPins, timerPeriod, controller) {
+  constructor(pwmPins, encoderPins, timerPeriod, controller, dirCorrect) {
     // Setup
     this.out1 = new Gpio(pwmPins[0], {
       mode: Gpio.OUTPUT
@@ -30,6 +30,7 @@ class Motor {
     this.controller = controller;
     this.levelA = 0;
     this.levelB = 0;
+    this.dirCorrect = dirCorrect;
 
     this.enc1.on('alert', (level, tick) => {
       this.currPulses++;
@@ -64,7 +65,7 @@ class Motor {
   }
 
   calcRpm(period) {
-    this.rpm = this.currPulses/pulsesPerTurn / (period* 1.667e-5);
+    this.rpm = this.dirCorrect * this.direction * this.currPulses/pulsesPerTurn / (period* 1.667e-5);
     this.currPulses = 0;
   }
 
