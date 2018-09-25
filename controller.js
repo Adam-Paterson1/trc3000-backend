@@ -20,7 +20,12 @@ class Controller {
       this.iErr = 0;
     }
     this.prevErr = pErr;
-    return pErr * this.kp + dErr * this.kd + this.ki * this.iErr;
+    if (pErr < 0) {
+    return -1 *pErr * pErr * this.kp + dErr * this.kd + this.ki * this.iErr;
+} else {
+
+    return pErr * pErr * this.kp + dErr * this.kd + this.ki * this.iErr;
+}
   }
 
 }
