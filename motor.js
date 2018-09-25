@@ -44,11 +44,11 @@ class Motor {
   pwmWrite(error) {
     if (!isNaN(error)) {
       if (error > 0) {
-        error += 85;
+        error += 95;
       } else if (error < 0) {
-        error -= 85;
+        error -= 95;
       }
-      this.pwm = Math.round(Math.min( Math.max( -220, error), 220));
+      this.pwm = Math.round(Math.min( Math.max( -240, error), 240));
       if (this.pwm > 0) {
         //console.log('pwm', this.pwm);
         this.out1.pwmWrite(this.pwm);

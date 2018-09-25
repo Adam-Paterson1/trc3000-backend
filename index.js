@@ -101,7 +101,7 @@ io.on('connection', (client) => {
         time2 = Date.now()
         dt = time2 - time1;
         time1 = time2;
-
+	//console.log(dt);
         //Clean it up and get bearing and tilt
         let nums = data.toString().split(' ').filter(el => el);
         gBearing = parseFloat(nums[0]);
@@ -145,7 +145,7 @@ io.on('connection', (client) => {
   });
   client.on('subscribeToImage', () => {
     console.log('subbing to vid');
-
+    //return;
     imgStream = spawn('raspistill', ['-t', '500000', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200]);
     imgStream.on("exit", function(code){
      console.log("Failure", code);
@@ -173,7 +173,7 @@ io.on('connection', (client) => {
         }
         //buff2 = buff.threshold(200,255, cv.THRESH_BINARY);
         //client.emit('image', [cv.imencode('.jpg', buff2).toString('base64')]);
-        client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
+        //client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
       });
     }, imagePeriod);
     // imgStream.stdout.on('data', (data) => {
