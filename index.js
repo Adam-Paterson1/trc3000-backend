@@ -55,7 +55,7 @@ const getHandContour = (handMask) => {
 
 
 const timerPeriod = 20;
-const imagePeriod = 200;
+const imagePeriod = 50;
 
 const cl = new Controller();
 const cr = new Controller();
@@ -63,7 +63,7 @@ const cTilt = new Controller();
 const cBearing = new Controller();
 const cVideo = new Controller();
 cVideo.target = 150;
-cVideo.kp = 1;
+cVideo.kp = 0.2;
 //B is left
 const ml = new Motor([19,26], [27, 17], timerPeriod, cl);
 const mr = new Motor([16, 20], [23,24], timerPeriod, cr);
@@ -114,7 +114,7 @@ io.on('connection', (client) => {
 
         //Run all of our controllers
         // Tilt error should be positive if it needs to drive forward and neg for back
-        tiltErr = cTilt.run(-gTilt, dt);
+        tiltErr = 0;//-40;//cTilt.run(-gTilt, dt);
         // Bearing error should be positive to turn right NOT SET UP YET
         bearingErr = 0;//cBearing.run(gBearing, dt);
         // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
@@ -122,6 +122,7 @@ io.on('connection', (client) => {
         if (isNaN(vidErr)) {
           vidErr = 0;
         }
+               
         //console.log('v', vidErr)
         //Combine errors currently not doing any weighting
         leftErr = tiltErr - bearingErr + vidErr;
@@ -173,7 +174,7 @@ io.on('connection', (client) => {
         }
         //buff2 = buff.threshold(200,255, cv.THRESH_BINARY);
         //client.emit('image', [cv.imencode('.jpg', buff2).toString('base64')]);
-        //client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
+        client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
       });
     }, imagePeriod);
     // imgStream.stdout.on('data', (data) => {
