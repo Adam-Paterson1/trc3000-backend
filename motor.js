@@ -1,9 +1,9 @@
-const Gpio = require('pigpio').Gpio;
+import { Gpio } from 'pigpio';
 
 const pulsesPerTurn = 1800
 
 class Motor {
-  constructor(pwmPins, encoderPins, timerPeriod, controller) {
+  constructor(pwmPins, encoderPins, offsets, controller) {
     // Setup
     this.out1 = new Gpio(pwmPins[0], {
       mode: Gpio.OUTPUT
@@ -32,21 +32,22 @@ class Motor {
     this.pwm = 0;
     this.out1.pwmFrequency(20000);
     this.out2.pwmFrequency(20000);
-    this.timerPeriod = timerPeriod * 1.667e-5;
     this.controller = controller;
+    this.fwdOffset = offsets[0];
+    this.backOffset = offsets[1];
   }
 
-  calcRpm() {
-    this.rpm = this.currPulses/pulsesPerTurn / this.timerPeriod;
+  calcRpm(period) {
+    this.rpm = this.currPulses/pulsesPerTurn / (period * 1.667e-5);
     this.currPulses = 0;
   }
 
   pwmWrite(error) {
     if (!isNaN(error)) {
       if (error > 0) {
-        error += 75;
+        error += this.fwdOffset;
       } else if (error < 0) {
-        error -= 85;
+        error -= this.backOffset;
       }
       this.pwm = Math.round(Math.min( Math.max( -240, error), 240));
       if (this.pwm > 0) {
@@ -61,9 +62,8 @@ class Motor {
         this.out1.digitalWrite(0);
         this.out2.digitalWrite(0);
       }
+    }
   }
 }
 
-}
-
-module.exports =  Motor
+export default Motor
