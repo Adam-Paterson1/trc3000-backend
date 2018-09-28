@@ -55,7 +55,7 @@ const getHandContour = (handMask) => {
 
 
 const timerPeriod = 20;
-const imagePeriod = 200;
+const imagePeriod = 1000;
 
 const cl = new Controller();
 const cr = new Controller();
@@ -101,6 +101,9 @@ io.on('connection', (client) => {
         time2 = Date.now()
         dt = time2 - time1;
         time1 = time2;
+        if (Math.abs(dt - 10) > 3) {
+console.log(dt)
+}
 	//console.log(dt);
         //Clean it up and get bearing and tilt
         let nums = data.toString().split(' ').filter(el => el);
@@ -145,8 +148,8 @@ io.on('connection', (client) => {
   });
   client.on('subscribeToImage', () => {
     console.log('subbing to vid');
-    return;
-    imgStream = spawn('raspistill', ['-t', '500000', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200]);
+    //return;
+    imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200, '-q', 5, '-bm', '-md' , 1]);
     imgStream.on("exit", function(code){
      console.log("Failure", code);
     });
@@ -154,31 +157,33 @@ io.on('connection', (client) => {
     let buff2;
     setInterval(() => {
       cv.imreadAsync('/home/pi/Desktop/fake/some.jpg', (err, buff) => {
-        //const hsvImg = buff.cvtColor(cv.COLOR_BGR2HSV);
+        const hsvImg = buff.cvtColor(cv.COLOR_BGR2HSV);
         const handMask = makeHandMask(buff);
         const handContour = getHandContour(handMask);
         const blueMat = new cv.Mat(100, 100, cv.CV_8UC3, [60, 255, 255]);
-        buff2 = buff.copy();
+        //buff2 = buff.copy();
         buff2 = handMask;//buff2.cvtColor(cv.COLOR_HSV2BGR);
-        if (handContour) {
-          buff.drawContours([handContour], blue, { thickness: 2 });
-          let M = handContour.moments();
-          let cx = Math.round(M.m10/M.m00);
-          //let cy = Math.round(M.m01/M.m00);
-          gVideo = cx;
-          if (isNaN(gVideo)) {
-            gVideo = 0;
-          }
+        //if (handContour) {
+        //  buff.drawContours([handContour], blue, { thickness: 2 });
+        //  let M = handContour.moments();
+        //  let cx = Math.round(M.m10/M.m00);
+        //  //let cy = Math.round(M.m01/M.m00);
+        //  gVideo = cx;
+        //  if (isNaN(gVideo)) {
+        //    gVideo = 0;
+        //  }
           //console.log('cx', cx);
-        }
+        //}
         //buff2 = buff.threshold(200,255, cv.THRESH_BINARY);
         //client.emit('image', [cv.imencode('.jpg', buff2).toString('base64')]);
         //client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
       });
     }, imagePeriod);
-    // imgStream.stdout.on('data', (data) => {
-    //   console.log('data', data);
-    // })
+     //imgStream.stdout.on('data', (data) => {
+       //const matFromArray = new cv.Mat(Buffer.from(data), 200, 300, cv.CV_8UC3);
+        //client.emit('image', [cv.imencode('.jpg', matFromArray).toString('base64')]);
+       //console.log('data', typeof data);
+     //})
   });
   client.on('subscribeToThresh', () => {
     const mat1 = new cv.Mat(100, 100, cv.CV_8UC3, [colorLower.x, colorLower.y, colorLower.z]);
