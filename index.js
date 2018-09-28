@@ -129,7 +129,7 @@ io.on('connection', (client) => {
 	//ml.pwmWrite(100);
         //mr.pwmWrite(100);
         ml.pwmWrite(leftErr);
-        mr.pwmWrite(rightErr);
+        mr.pwmWrite(1.15* rightErr);
         //Note bearing is being sent as left RPM.
         client.emit('tilt', {Tilt: gTilt, leftRPM: gBearing, leftErr: leftErr, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr, rightPWM: mr.pwm})
 
@@ -145,7 +145,7 @@ io.on('connection', (client) => {
   });
   client.on('subscribeToImage', () => {
     console.log('subbing to vid');
-    //return;
+    return;
     imgStream = spawn('raspistill', ['-t', '500000', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200]);
     imgStream.on("exit", function(code){
      console.log("Failure", code);
