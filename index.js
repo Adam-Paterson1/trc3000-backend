@@ -6,12 +6,12 @@ app.use(express.static(path.join(__dirname, '../trc3000-frontend/build')))
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 //Robot Stuff
-const Controller = require('./controller').default;
+const Controller = require('./controller');
 const { fork, spawn } = require('child_process');
 const pigpio = require('pigpio');
 //Set sampling period to 2us
 pigpio.configureClock(2, pigpio.CLOCK_PCM);
-const Motor = require('./motor').default;
+const Motor = require('./motor');
 // const uart = require('./uart');
 const vision = fork('vision.js');
 //Start the picam immediately to give it time to warm up
@@ -51,6 +51,7 @@ function handleThresh (data) {
   io.emit('thresh', data )
 }
 function handleVid (data) {
+  //console.log('data', data);
   io.emit('image', data )
 }
 

@@ -1,4 +1,4 @@
-import { Gpio } from 'pigpio';
+const Gpio = require('pigpio').Gpio;
 
 const pulsesPerTurn = 1800
 
@@ -66,4 +66,4 @@ class Motor {
   }
 }
 
-export default Motor
+module.exports = Motor

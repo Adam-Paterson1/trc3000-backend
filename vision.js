@@ -1,3 +1,5 @@
+const { spawn } = require('child_process');
+
 const cv = require('opencv4nodejs');
 
 const blue = new cv.Vec(255, 0, 0);
@@ -6,7 +8,7 @@ const red = new cv.Vec(0, 0, 255);
 let colorUpper = new cv.Vec(28, 255, 220);
 let colorLower = new cv.Vec(22, 150, 0);
 
-const imagePeriod = 1000;
+const imagePeriod = 100;
 let imgStream, imgInterval, gVideo;
 
 process.on('message', (msg) => {
@@ -70,13 +72,15 @@ function handleHSV(data) {
 }
 function handleStart() {
   console.log('turning on camera');
-
+  if (!imgStream) {
   imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200, '-q', 5, '-bm', '-md' , 1]);
   imgStream.on("exit", function(code){
    console.log("Failure", code);
   });
+  }
 }
 function handleSub() {
+  if (!imgInterval) {
   let buff;
   let buff2;
   let M;
@@ -104,8 +108,10 @@ function handleSub() {
     //client.emit('image', [cv.imencode('.jpg', buff2).toString('base64')]);
     //client.emit('image', [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]);
   }, imagePeriod);
+  }
 }
 function handleStop() {
+  console.log('killing vision');
   if (imgStream) {
     imgStream.kill('SIGINT');
   }

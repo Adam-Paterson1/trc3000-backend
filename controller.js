@@ -24,5 +24,4 @@ class Controller {
   }
 
 }
-
-export default Controller
+module.exports = Controller
