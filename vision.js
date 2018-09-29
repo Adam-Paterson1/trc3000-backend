@@ -8,7 +8,7 @@ const red = new cv.Vec(0, 0, 255);
 let colorUpper = new cv.Vec(28, 255, 220);
 let colorLower = new cv.Vec(22, 150, 0);
 
-const imagePeriod = 100;
+const imagePeriod = 200;
 let imgStream, imgInterval, gVideo;
 
 process.on('message', (msg) => {
@@ -74,8 +74,17 @@ function handleStart() {
   console.log('turning on camera');
   if (!imgStream) {
   imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200, '-q', 5, '-bm', '-md' , 1]);
+  imgStream.on("data", function(data){
+   console.log("Data", data);
+  });
+  imgStream.on("close", function(code){
+   console.log("Close", code);
+  });
+  imgStream.on("error", function(code){
+   console.log("Error", code);
+  });
   imgStream.on("exit", function(code){
-   console.log("Failure", code);
+   console.log("Exit", code);
   });
   }
 }
@@ -115,5 +124,5 @@ function handleStop() {
   if (imgStream) {
     imgStream.kill('SIGINT');
   }
-  clearInterval(imgInteval);
+  clearInterval(imgInterval);
 }

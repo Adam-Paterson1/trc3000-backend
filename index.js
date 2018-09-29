@@ -15,7 +15,7 @@ const Motor = require('./motor');
 // const uart = require('./uart');
 const vision = fork('vision.js');
 //Start the picam immediately to give it time to warm up
-vision.send({type: 'START'});
+//vision.send({type: 'START'});
 
 const cl = new Controller();
 const cr = new Controller();
@@ -27,10 +27,18 @@ cVideo.kp = 1;
 const ml = new Motor([19,26], [27, 17], [90, 90], cl);
 const mr = new Motor([16, 20], [23,24], [90, 90], cr);
 
+const pid = process.pid;
 let minimu;
 let gTilt = 0;
 let gBearing = 0;
 let gVideo = 0;
+console.log(pid);
+let toRT = spawn('chrt', ['-p', '-f', 5, pid])
+toRT.on('close', (code) => {
+if (code !== 0) {
+    console.log(`chrt process exited with code ${code}`);
+  }
+})
 
 vision.on('message', (msg) => 
 {
@@ -58,12 +66,26 @@ function handleVid (data) {
 io.on('connection', (client) => {
   client.on('subscribeToTilt', () => {
     if (!minimu) {
-      minimu = spawn('minimu9-ahrs', ['--output', 'euler', '-b', '/dev/i2c-1'], {cwd: '/home/pi/Documents/trc3000/trc3000-backend', shell: true});
+      minimu = spawn('minimu9-ahrs', ['--output', 'euler', '-b', '/dev/i2c-1'], {cwd: '/home/pi/Documents/trc3000/trc3000-backend', shell: true, detached: true});
       let time1 = Date.now();
       let time2, dt;
       let tiltErr, vidErr;
       let leftErr, rightErr;
+      let nums;
+      function noNulls(el) {
+        return el
+      } 
       minimu.stdout.on('data', function(data) {
+       //Clean it up and get bearing and tilt
+        nums = data.toString().split(' ').filter(noNulls);
+        //gBearing = parseFloat(nums[0]);
+        gTilt = parseFloat(nums[1]);
+        if (gTilt > 90) {
+          gTilt = -180 + gTilt
+        } else if (gTilt < -90) {
+          gTilt = 180 + gTilt
+        }        
+
         //Minimu new reading make timestamp
         time2 = Date.now()
         dt = time2 - time1;
@@ -71,16 +93,6 @@ io.on('connection', (client) => {
         if (Math.abs(dt - 10) > 3) {
           console.log(dt)
         }
-       //Clean it up and get bearing and tilt
-        let nums = data.toString().split(' ').filter(el => el);
-        //gBearing = parseFloat(nums[0]);
-        gTilt = parseFloat(nums[1]);
-        if (gTilt > 90) {
-          gTilt = -180 + gTilt
-        } else if (gTilt < -90) {
-          gTilt = 180 + gTilt
-        }
-
         //Run all of our controllers
         // Tilt error should be positive if it needs to drive forward and neg for back
         tiltErr = cTilt.run(gTilt, dt);
@@ -97,6 +109,9 @@ io.on('connection', (client) => {
         //mr.pwmWrite(100);
         ml.pwmWrite(leftErr);
         mr.pwmWrite(1.15* rightErr);
+        //time2 = Date.now()
+        //dt = time2 - time1;
+        //console.log(dt);
         io.emit('tilt', {Tilt: gTilt, leftRPM: ml.rpm, leftErr: leftErr, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr, rightPWM: mr.pwm})
       });
       minimu.stderr.on('data', function(data) {
@@ -110,7 +125,7 @@ io.on('connection', (client) => {
   });
   client.on('subscribeToImage', () => {
     console.log('subbing to vid');
-    vision.send({type:'SUB'})
+    //vision.send({type:'SUB'})
   });
   client.on('subscribeToThresh', () => {
     vision.send({type: 'THRESH'})
@@ -161,23 +176,18 @@ io.on('connection', (client) => {
   client.on('stop', () => {
     vision.send({type: 'STOP'})
     if (minimu) {
-      minimu.kill('SIGINT');
+      process.kill(-minimu.pid);
+      //minimu.kill('SIGINT');
     }
-    while (1) {
+    for (let i=0; i<100; i++) {
       cl.target = 0;
       cr.target = 0;
       ml.pwm = 0;
       mr.pwm = 0;
       ml.pwmWrite(0)
       mr.pwmWrite(0)
-    } 
-    cl.target = 0;
-    cr.target = 0;
-    ml.pwm = 0;
-    mr.pwm = 0;
-    ml.pwmWrite()
-    mr.pwmWrite()
-    io.emit('target', {leftRPM: cl.target, rightRPM: cr.target, Tilt: 0})
+      io.emit('target', {leftRPM: cl.target, rightRPM: cr.target, Tilt: 0})
+    }
   })
 });
 
