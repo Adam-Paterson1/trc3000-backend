@@ -15,7 +15,7 @@ const Motor = require('./motor');
 // const uart = require('./uart');
 const vision = fork('vision.js');
 //Start the picam immediately to give it time to warm up
-//vision.send({type: 'START'});
+vision.send({type: 'START'});
 
 const cl = new Controller();
 const cr = new Controller();
@@ -24,8 +24,8 @@ const cVideo = new Controller();
 cVideo.target = 150;
 cVideo.kp = 1;
 //B is left
-const ml = new Motor([19,26], [27, 17], [90, 90], cl);
-const mr = new Motor([16, 20], [23,24], [90, 90], cr);
+const ml = new Motor([26, 19], [27, 17], [95, 90], [1, 1], cl, 1);
+const mr = new Motor([20, 16], [23,24], [100, 92], [1.05, 1.35], cr, -1);
 
 const pid = process.pid;
 let minimu;
@@ -100,6 +100,8 @@ io.on('connection', (client) => {
         if (isNaN(vidErr)) {
           vidErr = 0;
         }
+        ml.calcRpm(dt);
+        mr.calcRpm(dt);
         //console.log('v', vidErr)
         //Combine errors currently not doing any weighting
         leftErr = tiltErr + vidErr;
@@ -107,7 +109,7 @@ io.on('connection', (client) => {
         //ml.pwmWrite(100);
         //mr.pwmWrite(100);
         ml.pwmWrite(leftErr);
-        mr.pwmWrite(1.15* rightErr);
+        mr.pwmWrite(rightErr);
         //time2 = Date.now()
         //dt = time2 - time1;
         //console.log(dt);
@@ -139,9 +141,11 @@ io.on('connection', (client) => {
   client.on('setTarget', (target) => {
     if (target.leftRPM != null) {
       cl.target = target.leftRPM;
+      ml.pwmWrite(Number(target.leftRPM));
       io.emit('target', {leftRPM: cl.target})
     } else if (target.rightRPM != null) {
       cr.target = target.rightRPM;
+      mr.pwmWrite(Number(target.rightRPM));
       io.emit('target', {rightRPM: cr.target})
     } else if (target.Tilt != null) {
       cTilt.target = target.Tilt;

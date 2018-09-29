@@ -3,7 +3,7 @@ const Gpio = require('pigpio').Gpio;
 const pulsesPerTurn = 1800
 
 class Motor {
-  constructor(pwmPins, encoderPins, offsets, controller) {
+  constructor(pwmPins, encoderPins, offsets, gains, controller, dirCorrect) {
     // Setup
     this.out1 = new Gpio(pwmPins[0], {
       mode: Gpio.OUTPUT
@@ -19,13 +19,8 @@ class Motor {
       mode: Gpio.INPUT,
       alert: true
     });
-    this.enc1.on('alert', (level, tick) => {
-      this.currPulses++;
-    });
-    // Add in state machine in here ie: level = 1, and level for other thing is 0 so double switch
-    this.enc2.on('alert', (level, tick) => {
-      this.currPulses++;
-    });
+
+
     // Initial values
     this.currPulses = 0;
     this.rpm = 0;
@@ -35,19 +30,55 @@ class Motor {
     this.controller = controller;
     this.fwdOffset = offsets[0];
     this.backOffset = offsets[1];
+    this.fwdGain = gains[0];
+    this.backGain = gains[1];
+    this.levelA = 0;
+    this.levelB = 0;
+    this.dirCorrect = dirCorrect;
+
+
+    this.enc1.on('alert', (level, tick) => {
+      this.currPulses++;
+      //Pulses need to be subtracted here if dir swapped?
+      //Going forward and sloing down all good
+      //Forward - stop - back
+      if (this.levelB == 0) {
+        //10 -> 00
+        if (this.levelA == 1 && level == 0) {
+          this.direction = -1;
+        } //00 -> 10
+        else if (this.levelA == 0 && level == 1) {
+          this.direction = 1;
+        }
+      } else {
+        //01 -> 11
+        if (this.levelA == 0 && level == 1) {
+          this.direction = -1;
+        } //11 -> 01
+        else if (this.levelA == 1 && level == 0) {
+          this.direction = 1;
+        }
+      }
+      this.levelA = level;
+    });
+    // Add in state machine in here ie: level = 1, and level for other thing is 0 so double switch
+    this.enc2.on('alert', (level, tick) => {
+      this.currPulses++;
+      this.levelB = level;
+    });
   }
 
   calcRpm(period) {
-    this.rpm = this.currPulses/pulsesPerTurn / (period * 1.667e-5);
+    this.rpm = this.dirCorrect * this.direction * this.currPulses/pulsesPerTurn / (period * 1.667e-5);
     this.currPulses = 0;
   }
 
   pwmWrite(error) {
     if (!isNaN(error)) {
       if (error > 0) {
-        error += this.fwdOffset;
+        error = error * this.fwdGain + this.fwdOffset;
       } else if (error < 0) {
-        error -= this.backOffset;
+        error = error * this.backGain - this.backOffset;
       }
       this.pwm = Math.round(Math.min( Math.max( -240, error), 240));
       if (this.pwm > 0) {
