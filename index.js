@@ -35,8 +35,8 @@ let gVideo = 0;
 console.log(pid);
 let toRT = spawn('chrt', ['-p', '-f', 5, pid])
 toRT.on('close', (code) => {
-if (code !== 0) {
-    console.log(`chrt process exited with code ${code}`);
+if (code !== 0) {
+    console.log(`chrt process exited with code ${code}`);
   }
 })
 
@@ -84,8 +84,7 @@ io.on('connection', (client) => {
           gTilt = -180 + gTilt
         } else if (gTilt < -90) {
           gTilt = 180 + gTilt
-        }        
-
+        }
         //Minimu new reading make timestamp
         time2 = Date.now()
         dt = time2 - time1;
@@ -125,7 +124,7 @@ io.on('connection', (client) => {
   });
   client.on('subscribeToImage', () => {
     console.log('subbing to vid');
-    //vision.send({type:'SUB'})
+    vision.send({type:'SUB'})
   });
   client.on('subscribeToThresh', () => {
     vision.send({type: 'THRESH'})
@@ -177,7 +176,6 @@ io.on('connection', (client) => {
     vision.send({type: 'STOP'})
     if (minimu) {
       process.kill(-minimu.pid);
-      //minimu.kill('SIGINT');
     }
     for (let i=0; i<100; i++) {
       cl.target = 0;
