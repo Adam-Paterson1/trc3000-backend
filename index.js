@@ -25,7 +25,7 @@ cVideo.target = 150;
 cVideo.kp = 1;
 //B is left
 const ml = new Motor([26, 19], [27, 17], [95, 90], [1, 1], cl, 1);
-const mr = new Motor([20, 16], [23,24], [100, 92], [1.05, 1.35], cr, -1);
+const mr = new Motor([20, 16], [23,24], [100, 92], [1.05, 1.25], cr, -1);
 
 const pid = process.pid;
 let minimu;
@@ -81,9 +81,9 @@ io.on('connection', (client) => {
         //gBearing = parseFloat(nums[0]);
         gTilt = parseFloat(nums[1]);
         if (gTilt > 90) {
-          gTilt = -180 + gTilt
+          gTilt = 180 - gTilt
         } else if (gTilt < -90) {
-          gTilt = 180 + gTilt
+          gTilt = -180 - gTilt
         }
         //Minimu new reading make timestamp
         time2 = Date.now()
