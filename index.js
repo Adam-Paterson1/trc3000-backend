@@ -140,21 +140,21 @@ io.on('connection', (client) => {
   })
   client.on('setTarget', (target) => {
     if (target.leftRPM != null) {
-      cl.target = target.leftRPM;
-      ml.pwmWrite(Number(target.leftRPM));
+      cl.target = Number(target.leftRPM);
+      //ml.pwmWrite(Number(target.leftRPM));
       io.emit('target', {leftRPM: cl.target})
     } else if (target.rightRPM != null) {
-      cr.target = target.rightRPM;
-      mr.pwmWrite(Number(target.rightRPM));
+      cr.target = Number(target.rightRPM);
+      //mr.pwmWrite(Number(target.rightRPM));
       io.emit('target', {rightRPM: cr.target})
     } else if (target.Tilt != null) {
-      cTilt.target = target.Tilt;
+      cTilt.target = Number(target.Tilt);
       io.emit('target', {Tilt: cTilt.target})
     }
     console.log('setting target', target)
   })
   client.on('getTarget', () => {
-    io.emit('target', cl.target)
+    io.emit('target', {Tilt: cTilt.target, leftRPM: cl.target, rightRPM: cr.target})
   })
   client.on('setGains', (gains) => {
     console.log('gains', gains);
