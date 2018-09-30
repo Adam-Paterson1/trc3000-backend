@@ -92,12 +92,12 @@ class Motor {
 
   pwmWrite(error) {
     if (!isNaN(error)) {
-      if (error > 0) {
-        error = error * this.fwdGain + this.fwdOffset;
-      } else if (error < 0) {
-        error = error * this.backGain - this.backOffset;
-      }
-      this.pwm = Math.round(Math.min( Math.max( -240, error), 240));
+      //if (error > 0) {
+      //  error = error * this.fwdGain + this.fwdOffset;
+      //} else if (error < 0) {
+      //  error = error * this.backGain - this.backOffset;
+     // }
+      this.pwm = Math.round(Math.min( Math.max( -240, this.pwm + error), 240));
       if (this.pwm > 0) {
         //console.log('pwm', this.pwm);
         this.out1.pwmWrite(this.pwm);

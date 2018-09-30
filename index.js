@@ -18,7 +18,13 @@ const vision = fork('vision.js');
 vision.send({type: 'START'});
 
 const cl = new Controller();
+cl.kp = 0.5;
+cl.ki = 0.001;
+cl.kd = 14;
 const cr = new Controller();
+cr.kp = 0.5;
+cr.ki = 0.001;
+cr.kd = 14;
 const cTilt = new Controller();
 const cVideo = new Controller();
 cVideo.target = 150;
@@ -71,6 +77,7 @@ io.on('connection', (client) => {
       let time2, dt;
       let tiltErr, vidErr;
       let leftErr, rightErr;
+      let leftErr2, rightErr2;
       let nums;
       function noNulls(el) {
         return el
@@ -106,14 +113,19 @@ io.on('connection', (client) => {
         //Combine errors currently not doing any weighting
         leftErr = tiltErr + vidErr;
         rightErr = tiltErr - vidErr;
+        cl.target = leftErr;
+        cr.target = rightErr;
+        leftErr2 = cl.run(ml.rpm, dt);
+        rightErr2 = cr.run(mr.rpm, dt);
         //ml.pwmWrite(100);
         //mr.pwmWrite(100);
-        ml.pwmWrite(leftErr);
-        mr.pwmWrite(rightErr);
+        ml.pwmWrite(leftErr2);
+        mr.pwmWrite(rightErr2);
         //time2 = Date.now()
         //dt = time2 - time1;
         //console.log(dt);
-        io.emit('tilt', {Tilt: gTilt, leftRPM: ml.rpm, leftErr: leftErr, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr, rightPWM: mr.pwm})
+        io.emit('target', {leftRPM: cl.target, rightRPM: cr.target});
+        io.emit('tilt', {Tilt: gTilt, leftRPM: ml.rpm, leftErr: leftErr2, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr2, rightPWM: mr.pwm})
       });
       minimu.stderr.on('data', function(data) {
         console.log('stderr: ' + data);
@@ -159,21 +171,21 @@ io.on('connection', (client) => {
   client.on('setGains', (gains) => {
     console.log('gains', gains);
 
-    cl.kp = Number(gains.kp);
-    cr.kp = Number(gains.kp);
+    //cl.kp = Number(gains.kp);
+    //cr.kp = Number(gains.kp);
     cTilt.kp = Number(gains.kp);
 
-    cl.ki = Number(gains.ki);
-    cr.ki = Number(gains.ki);
+    //cl.ki = Number(gains.ki);
+    //cr.ki = Number(gains.ki);
     cTilt.ki = Number(gains.ki);
 
-    cl.kd = Number(gains.kd);
-    cr.kd = Number(gains.kd);
+    //cl.kd = Number(gains.kd);
+    //cr.kd = Number(gains.kd);
     cTilt.kd = Number(gains.kd);
     emitGains();
    })
   function emitGains() {
-    io.emit('gains', {kp: cl.kp, ki: cl.ki, kd: cl.kd})
+    io.emit('gains', {kp: cTilt.kp, ki: cTilt.ki, kd: cTilt.kd})
   }
   client.on('getGains', emitGains)
   client.on('stop', () => {
