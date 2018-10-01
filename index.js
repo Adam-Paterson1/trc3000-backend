@@ -24,8 +24,8 @@ const cVideo = new Controller();
 cVideo.target = 150;
 cVideo.kp = 1;
 //B is left
-const ml = new Motor([26, 19], [27, 17], [95, 90], [1, 1], cl, 1);
-const mr = new Motor([20, 16], [23,24], [100, 92], [1.05, 1.25], cr, -1);
+const ml = new Motor([26, 19], [27, 17], [90, 85], [1, 1], cl, 1);
+const mr = new Motor([20, 16], [23,24], [95, 87], [1.05, 1.2], cr, -1);
 
 const pid = process.pid;
 let minimu;
@@ -108,8 +108,9 @@ io.on('connection', (client) => {
         rightErr = tiltErr - vidErr;
         //ml.pwmWrite(100);
         //mr.pwmWrite(100);
-        ml.pwmWrite(leftErr);
-        mr.pwmWrite(rightErr);
+        const avg = (ml.rpm + mr.rpm) /2
+        ml.pwmWrite(leftErr +avg);
+        mr.pwmWrite(rightErr + avg);
         //time2 = Date.now()
         //dt = time2 - time1;
         //console.log(dt);

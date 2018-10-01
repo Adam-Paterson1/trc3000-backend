@@ -7,7 +7,7 @@ class Controller {
     this.kd = 0;
     this.ki = 0;
     this.iErr = 0;
-    this.maxIErr = 100;
+    this.maxIErr = 1000;
     }
   run (currVal, dt) {
     let pErr = this.target - currVal;
@@ -17,6 +17,7 @@ class Controller {
       this.iErr = Math.sign(this.iErr) * this.maxIErr;
     }
     if (Math.abs(pErr) < 3) {
+      //log('clearing');
       this.iErr = 0;
     }
     this.prevErr = pErr;
