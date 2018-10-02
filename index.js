@@ -21,8 +21,10 @@ const cl = new Controller();
 const cr = new Controller();
 const cTilt = new Controller();
 const cVideo = new Controller();
+
 cVideo.target = 150;
-cVideo.kp = 0.1;
+cVideo.kp = 0.07;
+let ready = false;
 //B is left
 const ml = new Motor([26, 19], [27, 17], [90, 85], [1, 1], cl, 1);
 const mr = new Motor([20, 16], [23,24], [95, 87], [1.05, 1.2], cr, -1);
@@ -96,7 +98,7 @@ io.on('connection', (client) => {
         // Tilt error should be positive if it needs to drive forward and neg for back
         tiltErr = cTilt.run(gTilt, dt);
         // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
-        vidErr = cVideo.run(gVideo, dt);
+        vidErr = 0//cVideo.run(gVideo, dt);
         if (isNaN(vidErr)) {
           vidErr = 0;
         }
@@ -108,9 +110,11 @@ io.on('connection', (client) => {
         rightErr = tiltErr + vidErr;
         //ml.pwmWrite(100);
         //mr.pwmWrite(100);
-        const avg = (ml.rpm + mr.rpm) /2
-        ml.pwmWrite(leftErr +avg);
-        mr.pwmWrite(rightErr + avg);
+        const avg = (ml.rpm + mr.rpm) /1.5;
+        if (ready) {
+          ml.pwmWrite(leftErr + avg);
+          mr.pwmWrite(rightErr + avg);
+        }
         //time2 = Date.now()
         //dt = time2 - time1;
         //console.log(dt);
@@ -159,7 +163,7 @@ io.on('connection', (client) => {
   })
   client.on('setGains', (gains) => {
     console.log('gains', gains);
-
+    ready = true;
     cl.kp = Number(gains.kp);
     cr.kp = Number(gains.kp);
     cTilt.kp = Number(gains.kp);

@@ -5,10 +5,10 @@ const cv = require('opencv4nodejs');
 const blue = new cv.Vec(255, 0, 0);
 const green = new cv.Vec(0, 255, 0);
 const red = new cv.Vec(0, 0, 255);
-let colorUpper = new cv.Vec(28, 255, 220);
-let colorLower = new cv.Vec(22, 150, 0);
+let colorUpper = new cv.Vec(30, 255, 255);
+let colorLower = new cv.Vec(22, 100, 0);
 
-const imagePeriod = 200;
+const imagePeriod = 100;
 let imgStream, imgInterval, gVideo;
 
 process.on('message', (msg) => {
@@ -44,9 +44,27 @@ const makeHandMask = (img) => {
 const getHandContour = (handMask) => {
   const mode = cv.RETR_EXTERNAL;
   const method = cv.CHAIN_APPROX_SIMPLE;
-  const contours = handMask.findContours(mode, method);
+  let contours = handMask.findContours(mode, method);
   // largest contour
-  return contours.sort((c0, c1) => c1.area - c0.area)[0];
+  contours = contours.filter((contour) => {
+   return (contour.area > 200)
+})
+  contours = contours.filter((contour) => {
+    const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
+    return (poly.length <= 4)
+  })
+  //contours = contours.filter((contour) => {
+  //  const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
+  //  console.log(poly);
+  //  return (poly.length <= 4)
+  //})
+
+  contours.sort((c0, c1) => c1.area - c0.area)
+  if (contours[0]) {
+  console.log(contours[0].area)
+  return contours[0];
+}
+ return null;
 };
 
 
