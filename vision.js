@@ -51,8 +51,9 @@ const getHandContour = (handMask) => {
 })
   contours = contours.filter((contour) => {
     const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
-    return (poly.length <= 4)
+    return (poly.length <= 4 && Orientation(poly))
   })
+  
   //contours = contours.filter((contour) => {
   //  const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
   //  console.log(poly);
@@ -143,4 +144,61 @@ function handleStop() {
     imgStream.kill('SIGINT');
   }
   clearInterval(imgInterval);
+}
+
+let Ymin, Ymax, len, len2, len3, i, midpoint;
+let Xa, Xb, XaMax, XaMin, XbMax, XbMin;
+function Orientation(points) {
+  Ymin = points[0].y;
+  Ymax = points[0].y;
+  len = points.length;
+  for (i = 1; i < len; i++) {
+    if (points[i].y > Ymax) {
+      Ymax = points[i].y;
+    } else if (points[i].y < Ymin) {
+      Ymin = points[i].y;
+    }
+  }
+  midpoint = Ymin + ((Ymax-Ymin)/2);
+  Xa = [];
+  Xb = [];
+  for (i = 0; i < len; i++) {
+    if (points[i].y < midpoint) {
+      Xa.push(points[i].x);
+    } else {
+      Xb.push(points[i].x);
+    }
+  }
+  XaMin = Xa[0];
+  XaMax = Xa[0];
+  len2 = Xa.length;
+  for (i = 1; i < len2; i++) {
+    if (Xa[i] > XaMax) {
+      XaMax = Xa[i];
+    } else if (Xa[i] < XaMin) {
+      XaMin = Xa[i];
+    }
+  }
+  XbMin = Xb[0];
+  XbMax = Xb[0];
+  len3 = Xb.length;
+  for (i = 1; i < len3; i++) {
+    if (Xb[i] > XbMax) {
+      XbMax = Xb[i];
+    } else if (Xb[i] < XbMin) {
+      XbMin = Xb[i];
+    }
+  }
+  if((XaMin > XbMin) && (XaMax < XbMax)){
+    console.log("Upright");
+    return true;
+  }
+  else if((XaMin < XbMin) && (XaMax > XbMax)){
+    console.log("Upside Down");
+    return false;
+  }
+  else{
+    console.log("Strange Orientation");
+    return false;
+  }
 }
