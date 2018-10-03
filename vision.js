@@ -6,7 +6,7 @@ const blue = new cv.Vec(255, 0, 0);
 const green = new cv.Vec(0, 255, 0);
 const red = new cv.Vec(0, 0, 255);
 let colorUpper = new cv.Vec(30, 255, 255);
-let colorLower = new cv.Vec(22, 100, 0);
+let colorLower = new cv.Vec(18, 150, 30);
 
 const imagePeriod = 200;
 let imgStream, imgInterval, gVideo;
@@ -92,7 +92,7 @@ function handleHSV(data) {
 function handleStart() {
   console.log('turning on camera');
   if (!imgStream) {
-  imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 200, '-q', 5, '-bm', '-md' , 1]);
+  imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 750, '-h', 40, '-q', 5, '-bm', '-md' , 1]);
   imgStream.on("data", function(data){
    console.log("Data", data);
   });

@@ -22,7 +22,7 @@ const cr = new Controller();
 const cTilt = new Controller();
 const cVideo = new Controller();
 
-cVideo.target = 150;
+cVideo.target = 600;
 cVideo.kp = 0.07;
 let ready = false;
 //B is left
@@ -98,6 +98,11 @@ io.on('connection', (client) => {
         // Tilt error should be positive if it needs to drive forward and neg for back
         tiltErr = cTilt.run(gTilt, dt);
         // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
+        if (gVideo - cVideo.target > 150) {
+          gVideo = cVideo.target +150;
+        } else if (gVideo - cVideo.target < -150) {
+          gVideo = cVideo.target - 150;
+        }
         vidErr = cVideo.run(gVideo, dt);
         if (isNaN(vidErr)) {
           vidErr = 0;
