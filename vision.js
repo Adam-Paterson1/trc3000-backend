@@ -8,7 +8,7 @@ const red = new cv.Vec(0, 0, 255);
 let colorUpper = new cv.Vec(30, 255, 255);
 let colorLower = new cv.Vec(22, 100, 0);
 
-const imagePeriod = 100;
+const imagePeriod = 200;
 let imgStream, imgInterval, gVideo;
 
 process.on('message', (msg) => {

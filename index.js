@@ -98,7 +98,7 @@ io.on('connection', (client) => {
         // Tilt error should be positive if it needs to drive forward and neg for back
         tiltErr = cTilt.run(gTilt, dt);
         // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
-        vidErr = 0//cVideo.run(gVideo, dt);
+        vidErr = cVideo.run(gVideo, dt);
         if (isNaN(vidErr)) {
           vidErr = 0;
         }
