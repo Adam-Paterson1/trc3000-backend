@@ -20,10 +20,10 @@ vision.send({type: 'START'});
 const cl = new Controller();
 const cr = new Controller();
 const cTilt = new Controller();
-const cVideo = new Controller();
+//const cVideo = new Controller();
 
-cVideo.target = 600;
-cVideo.kp = 0.07;
+//cVideo.target = 95;
+//cVideo.kp = 1;
 let ready = false;
 //B is left
 const ml = new Motor([26, 19], [27, 17], [90, 85], [1, 1], cl, 1);
@@ -98,23 +98,22 @@ io.on('connection', (client) => {
         // Tilt error should be positive if it needs to drive forward and neg for back
         tiltErr = cTilt.run(gTilt, dt);
         // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
-        if (gVideo - cVideo.target > 150) {
-          gVideo = cVideo.target +150;
-        } else if (gVideo - cVideo.target < -150) {
-          gVideo = cVideo.target - 150;
-        }
-        vidErr = cVideo.run(gVideo, dt);
-        if (isNaN(vidErr)) {
-          vidErr = 0;
-        }
+        //if (gVideo - cVideo.target > 100) {
+        //  gVideo = cVideo.target + 100;
+        //} else if (gVideo - cVideo.target < -100) {
+        //  gVideo = cVideo.target - 100;
+        //}
+        //vidErr = cVideo.run(gVideo, dt);
+        //if (isNaN(vidErr)) {
+        //  vidErr = 0;
+        //}
         ml.calcRpm(dt);
         mr.calcRpm(dt);
         //console.log('v', vidErr)
         //Combine errors currently not doing any weighting
-        leftErr = tiltErr - vidErr;
-        rightErr = tiltErr + vidErr;
-        //ml.pwmWrite(100);
-        //mr.pwmWrite(100);
+        leftErr = tiltErr - gVideo;
+        rightErr = tiltErr + gVideo;
+
         const avg = (ml.rpm + mr.rpm) /1.5;
         if (ready) {
           ml.pwmWrite(leftErr + avg);

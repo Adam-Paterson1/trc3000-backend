@@ -6,7 +6,7 @@ const blue = new cv.Vec(255, 0, 0);
 const green = new cv.Vec(0, 255, 0);
 const red = new cv.Vec(0, 0, 255);
 let colorUpper = new cv.Vec(30, 255, 255);
-let colorLower = new cv.Vec(18, 150, 30);
+let colorLower = new cv.Vec(18, 50, 30);
 
 const imagePeriod = 200;
 let imgStream, imgInterval, gVideo;
@@ -47,7 +47,7 @@ const getHandContour = (handMask) => {
   let contours = handMask.findContours(mode, method);
   // largest contour
   contours = contours.filter((contour) => {
-   return (contour.area > 200)
+   return (contour.area > 10)
 })
   contours = contours.filter((contour) => {
     const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
@@ -92,7 +92,7 @@ function handleHSV(data) {
 function handleStart() {
   console.log('turning on camera');
   if (!imgStream) {
-  imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 750, '-h', 40, '-q', 5, '-bm', '-md' , 1]);
+  imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 300, '-h', 100, '-q', 10, '-bm', '-md' , 1]);
   imgStream.on("data", function(data){
    console.log("Data", data);
   });
@@ -122,15 +122,18 @@ function handleSub() {
     buff2 = handMask;//buff2.cvtColor(cv.COLOR_HSV2BGR);
     if (handContour) {
       buff.drawContours([handContour], blue, { thickness: 2 });
-      M = handContour.moments();
-      gVideo = Math.round(M.m10/M.m00);
+      //M = handContour.moments();
+      gVideo = 17//Math.round(M.m10/M.m00);
       //let cy = Math.round(M.m01/M.m00);
       if (isNaN(gVideo)) {
         gVideo = 0;
       }
+    }
+    else {
+     gVideo = -2.5
+    }
       process.send({type: 'VIDERR', data: gVideo})
       console.log('cx', gVideo);
-    }
     //buff2 = buff.threshold(200,255, cv.THRESH_BINARY);
     process.send({type: 'VID', data: [cv.imencode('.jpg', buff).toString('base64'), cv.imencode('.jpg', buff2).toString('base64')]})
     //client.emit('image', [cv.imencode('.jpg', buff2).toString('base64')]);
@@ -189,16 +192,15 @@ function Orientation(points) {
       XbMin = Xb[i];
     }
   }
-  if((XaMin > XbMin) && (XaMax < XbMax)){
+  if((XaMin > XbMin) && (XaMax <= XbMax)){
     console.log("Upright");
     return true;
-  }
-  else if((XaMin < XbMin) && (XaMax > XbMax)){
-    console.log("Upside Down");
-    return false;
-  }
-  else{
+  } else {
     console.log("Strange Orientation");
     return false;
   }
+  //else if((XaMin < XbMin) && (XaMax > XbMax)){
+  //  console.log("Upside Down");
+  //  return false;
+  //}
 }
