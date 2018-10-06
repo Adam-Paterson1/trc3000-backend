@@ -123,14 +123,14 @@ function handleSub() {
     if (handContour) {
       buff.drawContours([handContour], blue, { thickness: 2 });
       //M = handContour.moments();
-      gVideo = 17//Math.round(M.m10/M.m00);
+      gVideo = 1//Math.round(M.m10/M.m00);
       //let cy = Math.round(M.m01/M.m00);
       if (isNaN(gVideo)) {
         gVideo = 0;
       }
     }
     else {
-     gVideo = -2.5
+     gVideo = -1
     }
       process.send({type: 'VIDERR', data: gVideo})
       console.log('cx', gVideo);

@@ -18,7 +18,9 @@ const vision = fork('vision.js');
 vision.send({type: 'START'});
 
 const cl = new Controller();
+cl.target = 17;
 const cr = new Controller();
+cr.target = 2.5;
 const cTilt = new Controller();
 //const cVideo = new Controller();
 
@@ -49,7 +51,7 @@ vision.on('message', (msg) =>
       handleThresh(msg.data);
       break;
     case 'VIDERR':
-      gVideo = msg.data;
+      gVideo = msg.data > 0 ? cl.target * msg.data : cr.target * msg.data
       break;
     case 'VID':
       handleVid(msg.data);
