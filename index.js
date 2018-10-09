@@ -31,15 +31,15 @@ let ready = false;
 const ml = new Motor([26, 19], [27, 17], [90, 85], [1, 1], cl, 1);
 const mr = new Motor([20, 16], [23,24], [95, 87], [1.05, 1.2], cr, -1);
 
-const IR = new Gpio(22, {
-  mode: Gpio.INPUT,
+{/* const IR = new pigpio.Gpio(22, {
+  mode: pigpio.Gpio.INPUT,
   alert: true
 });
 let coneIsClose = false;
 IR.on('alert', (level, tick) => {
   coneIsClose = !level;
   console.log('Cone ', coneIsClose)
-});
+}); */}
 
 const pid = process.pid;
 let minimu;
