@@ -18,9 +18,9 @@ const vision = fork('vision.js');
 vision.send({type: 'START'});
 
 const cl = new Controller();
-cl.target = 17;
+cl.target = 15;
 const cr = new Controller();
-cr.target = 2.5;
+cr.target = 5;
 const cTilt = new Controller();
 //const cVideo = new Controller();
 
