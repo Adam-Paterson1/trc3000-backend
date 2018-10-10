@@ -18,9 +18,9 @@ const vision = fork('vision.js');
 vision.send({type: 'START'});
 
 const cl = new Controller();
-cl.target = 15;
+cl.target = 12;
 const cr = new Controller();
-cr.target = 5;
+cr.target = 8;
 const cTilt = new Controller();
 //const cVideo = new Controller();
 
@@ -126,7 +126,7 @@ io.on('connection', (client) => {
         leftErr = tiltErr - gVideo;
         rightErr = tiltErr + gVideo;
 
-        const avg = (ml.rpm + mr.rpm) /1.5;
+        const avg = (ml.rpm + mr.rpm) /1.4;
         if (ready) {
           ml.pwmWrite(leftErr + avg);
           mr.pwmWrite(rightErr + avg);
@@ -184,17 +184,13 @@ io.on('connection', (client) => {
     cr.kp = Number(gains.kp);
     cTilt.kp = Number(gains.kp);
 
-    cl.ki = Number(gains.ki);
-    cr.ki = Number(gains.ki);
-    cTilt.ki = Number(gains.ki);
-
     cl.kd = Number(gains.kd);
     cr.kd = Number(gains.kd);
     cTilt.kd = Number(gains.kd);
     emitGains();
    })
   function emitGains() {
-    io.emit('gains', {kp: cl.kp, ki: cl.ki, kd: cl.kd})
+    io.emit('gains', {kp: cl.kp, kd: cl.kd})
   }
   client.on('getGains', emitGains)
   client.on('stop', () => {

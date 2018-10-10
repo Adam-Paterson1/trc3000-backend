@@ -8,8 +8,9 @@ const red = new cv.Vec(0, 0, 255);
 let colorUpper = new cv.Vec(30, 255, 255);
 let colorLower = new cv.Vec(18, 50, 30);
 
-const imagePeriod = 100;
+const imagePeriod = 150;
 let imgStream, imgInterval, gVideo;
+let lastArea = 0;
 
 process.on('message', (msg) => {
   switch (msg.type) {
@@ -53,16 +54,11 @@ const getHandContour = (handMask) => {
     const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
     return (poly.length <= 4 && Orientation(poly))
   })
-  
-  //contours = contours.filter((contour) => {
-  //  const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
-  //  console.log(poly);
-  //  return (poly.length <= 4)
-  //})
 
   contours.sort((c0, c1) => c1.area - c0.area)
   if (contours[0]) {
-  console.log(contours[0].area)
+    lastArea = contours[0].area;
+  console.log('area', contours[0].area)
   return contours[0];
 }
  return null;
@@ -92,7 +88,7 @@ function handleHSV(data) {
 function handleStart() {
   console.log('turning on camera');
   if (!imgStream) {
-  imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 150, '-h', 70, '-q', 10, '-bm', '-md' , 1]);
+  imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 150, '-h', 70, '-q', 5, '-bm', '-md' , 1]);
   imgStream.on("data", function(data){
    console.log("Data", data);
   });
@@ -123,13 +119,20 @@ function handleSub() {
     if (handContour) {
       buff.drawContours([handContour], blue, { thickness: 2 });
       //M = handContour.moments();
-      gVideo = 1//Math.round(M.m10/M.m00);
-      //let cy = Math.round(M.m01/M.m00);
-      if (isNaN(gVideo)) {
-        gVideo = 0;
+      if (lastArea > 1000) {
+        gVideo = 1;
+      } else {
+        gVideo = 0.5;
       }
+      //gVideo = 1//Math.round(M.m10/M.m00);
+      //let cy = Math.round(M.m01/M.m00);
     }
     else {
+     //if (lastArea > 1000) {
+     //  gVideo = -1;
+     //} else {
+     //  gVideo = -0.5;
+     //}
      gVideo = -1
     }
       process.send({type: 'VIDERR', data: gVideo})
