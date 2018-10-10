@@ -123,7 +123,7 @@ function handleSub() {
       if (lastArea > 1000) {
         gVideo = 1;
       } else {
-        gVideo = 0.3;
+        gVideo = 0.2;
       }
       //gVideo = 1//Math.round(M.m10/M.m00);
       //let cy = Math.round(M.m01/M.m00);
