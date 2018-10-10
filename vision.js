@@ -6,9 +6,9 @@ const blue = new cv.Vec(255, 0, 0);
 const green = new cv.Vec(0, 255, 0);
 const red = new cv.Vec(0, 0, 255);
 let colorUpper = new cv.Vec(30, 255, 255);
-let colorLower = new cv.Vec(18, 50, 30);
+let colorLower = new cv.Vec(18, 80, 30);
 
-const imagePeriod = 150;
+const imagePeriod = 75;
 let imgStream, imgInterval, gVideo;
 let lastArea = 0;
 
@@ -50,10 +50,11 @@ const getHandContour = (handMask) => {
   contours = contours.filter((contour) => {
    return (contour.area > 10)
 })
-  contours = contours.filter((contour) => {
-    const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
-    return (poly.length <= 4 && Orientation(poly))
-  })
+  //contours = contours.filter((contour) => {
+  //  const poly = contour.approxPolyDP(0.04 * contour.arcLength(true), true);
+  //  return (poly.length <= 4);
+    //return (poly.length <= 4 && Orientation(poly))
+  //})
 
   contours.sort((c0, c1) => c1.area - c0.area)
   if (contours[0]) {
@@ -88,7 +89,7 @@ function handleHSV(data) {
 function handleStart() {
   console.log('turning on camera');
   if (!imgStream) {
-  imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 150, '-h', 70, '-q', 5, '-bm', '-md' , 1]);
+  imgStream = spawn('raspistill', ['-t', '0', '-tl', imagePeriod, '-n', '-o', '/home/pi/Desktop/fake/some.jpg', '-w', 150, '-h', 70, '-q', 10, '-bm', '-md' , 1, '-ex', 'sports']);
   imgStream.on("data", function(data){
    console.log("Data", data);
   });
@@ -122,18 +123,18 @@ function handleSub() {
       if (lastArea > 1000) {
         gVideo = 1;
       } else {
-        gVideo = 0.5;
+        gVideo = 0.3;
       }
       //gVideo = 1//Math.round(M.m10/M.m00);
       //let cy = Math.round(M.m01/M.m00);
     }
     else {
-     //if (lastArea > 1000) {
-     //  gVideo = -1;
-     //} else {
-     //  gVideo = -0.5;
-     //}
-     gVideo = -1
+     if (lastArea > 1000) {
+       gVideo = -1;
+     } else {
+       gVideo = -1;
+     }
+     //gVideo = -1
     }
       process.send({type: 'VIDERR', data: gVideo})
       console.log('cx', gVideo);
@@ -200,7 +201,7 @@ function Orientation(points) {
     return true;
   } else {
     console.log("Strange Orientation");
-    return false;
+    return true;
   }
   //else if((XaMin < XbMin) && (XaMax > XbMax)){
   //  console.log("Upside Down");

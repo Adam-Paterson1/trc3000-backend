@@ -97,7 +97,7 @@ class Motor {
       } else if (error < 0) {
         error = error * this.backGain - this.backOffset;
       }
-      this.pwm = Math.round(Math.min( Math.max( -200, error), 230));
+      this.pwm = Math.round(Math.min( Math.max( -200, error), 240));
       if (this.pwm > 0) {
         //console.log('pwm', this.pwm);
         this.out1.pwmWrite(this.pwm);

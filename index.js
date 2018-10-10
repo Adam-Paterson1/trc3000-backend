@@ -20,7 +20,7 @@ vision.send({type: 'START'});
 const cl = new Controller();
 cl.target = 12;
 const cr = new Controller();
-cr.target = 8;
+cr.target = 10;
 const cTilt = new Controller();
 //const cVideo = new Controller();
 
@@ -123,8 +123,8 @@ io.on('connection', (client) => {
         mr.calcRpm(dt);
         //console.log('v', vidErr)
         //Combine errors currently not doing any weighting
-        leftErr = tiltErr - gVideo;
-        rightErr = tiltErr + gVideo;
+        leftErr = tiltErr - gVideo - 10;
+        rightErr = tiltErr + gVideo - 10;
 
         const avg = (ml.rpm + mr.rpm) /1.4;
         if (ready) {
