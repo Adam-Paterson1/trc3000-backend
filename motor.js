@@ -1,10 +1,10 @@
 const Gpio = require('pigpio').Gpio;
 
-const pulsesPerTurn = 1800;
+//const pulsesPerTurn = 1800;
 const toRpm = 900 * 1.667e-5;
 
 class Motor {
-  constructor(pwmPins, encoderPins, offsets, gains, controller, dirCorrect) {
+  constructor(pwmPins, encoderPins, offsets, gains, dirCorrect) {
     // Setup
     this.out1 = new Gpio(pwmPins[0], {
       mode: Gpio.OUTPUT
@@ -21,14 +21,12 @@ class Motor {
       alert: true
     });
 
-
     // Initial values
     this.currPulses = 0;
     this.rpm = 0;
     this.pwm = 0;
     this.out1.pwmFrequency(20000);
     this.out2.pwmFrequency(20000);
-    this.controller = controller;
     this.fwdOffset = offsets[0];
     this.backOffset = offsets[1];
     this.fwdGain = gains[0];
@@ -65,7 +63,6 @@ class Motor {
       }
       this.levelA = level;
     });
-    // Add in state machine in here ie: level = 1, and level for other thing is 0 so double switch
     this.enc2.on('alert', (level, tick) => {
       //this.currPulses++;
       this.levelB = level;
@@ -79,16 +76,6 @@ class Motor {
     this.rpmIndex = (this.rpmIndex + 1) % 3;
     this.currPulses = 0;
   }
-  //calcRpm(period) {
-  //  this.newVal = this.dirCorrect * this.direction * this.currPulses/(toRpm * period);
-  //  //console.log('diff', this.newVal, this.rpm);
-  //  if (Math.abs(this.newVal - this.rpm) > 6) {
-  //    this.rpm = this.rpm + 6 * Math.sign(this.newVal - this.rpm);
-  //  } else {
-  //    this.rpm = this.newVal;
-  //  }
-  //  this.currPulses = 0;
-  //}
 
   pwmWrite(error) {
     if (!isNaN(error)) {

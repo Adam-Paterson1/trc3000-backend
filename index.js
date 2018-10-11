@@ -28,8 +28,8 @@ const gains = {
 }
 let ready = false;
 //B is left
-const ml = new Motor([26, 19], [27, 17], [90, 85], [1, 1], cl, 1);
-const mr = new Motor([20, 16], [23,24], [95, 87], [1.05, 1.2], cr, -1);
+const ml = new Motor([26, 19], [27, 17], [90, 85], [1, 1], 1);
+const mr = new Motor([20, 16], [23,24], [95, 87], [1.05, 1.2], -1);
 
 const pid = process.pid;
 let minimu;
