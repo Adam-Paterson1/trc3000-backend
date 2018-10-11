@@ -22,29 +22,18 @@ cl.target = 12;
 const cr = new Controller();
 cr.target = 10;
 const cTilt = new Controller();
-//const cVideo = new Controller();
-
-//cVideo.target = 95;
-//cVideo.kp = 1;
+const gains = {
+  kp: 30,
+  kd: 900
+}
 let ready = false;
 //B is left
 const ml = new Motor([26, 19], [27, 17], [90, 85], [1, 1], cl, 1);
 const mr = new Motor([20, 16], [23,24], [95, 87], [1.05, 1.2], cr, -1);
 
-/* const IR = new pigpio.Gpio(22, {
-  mode: pigpio.Gpio.INPUT,
-  alert: true
-});
-let coneIsClose = false;
-IR.on('alert', (level, tick) => {
-  coneIsClose = !level;
-  console.log('Cone ', coneIsClose)
-}); */
-
 const pid = process.pid;
 let minimu;
 let gTilt = 0;
-let gBearing = 0;
 let gVideo = 0;
 console.log(pid);
 let toRT = spawn('chrt', ['-p', '-f', 5, pid])
@@ -54,8 +43,7 @@ if (code !== 0) {
   }
 })
 
-vision.on('message', (msg) => 
-{
+vision.on('message', (msg) => {
   switch (msg.type) {
     case 'THRESH':
       handleThresh(msg.data);
@@ -73,7 +61,6 @@ function handleThresh (data) {
   io.emit('thresh', data )
 }
 function handleVid (data) {
-  //console.log('data', data);
   io.emit('image', data )
 }
 
@@ -83,7 +70,7 @@ io.on('connection', (client) => {
       minimu = spawn('minimu9-ahrs', ['--output', 'euler', '-b', '/dev/i2c-1'], {cwd: '/home/pi/Documents/trc3000/trc3000-backend', shell: true, detached: true});
       let time1 = Date.now();
       let time2, dt;
-      let tiltErr, vidErr;
+      let tiltErr;
       let leftErr, rightErr;
       let nums;
       function noNulls(el) {
@@ -92,7 +79,6 @@ io.on('connection', (client) => {
       minimu.stdout.on('data', function(data) {
        //Clean it up and get bearing and tilt
         nums = data.toString().split(' ').filter(noNulls);
-        //gBearing = parseFloat(nums[0]);
         gTilt = parseFloat(nums[1]);
         if (gTilt > 90) {
           gTilt = 180 - gTilt
@@ -109,19 +95,8 @@ io.on('connection', (client) => {
         //Run all of our controllers
         // Tilt error should be positive if it needs to drive forward and neg for back
         tiltErr = cTilt.run(gTilt, dt);
-        // Video error should be positive to turn right NOT SET UP YET maybe make it p squared?
-        //if (gVideo - cVideo.target > 100) {
-        //  gVideo = cVideo.target + 100;
-        //} else if (gVideo - cVideo.target < -100) {
-        //  gVideo = cVideo.target - 100;
-        //}
-        //vidErr = cVideo.run(gVideo, dt);
-        //if (isNaN(vidErr)) {
-        //  vidErr = 0;
-        //}
         ml.calcRpm(dt);
         mr.calcRpm(dt);
-        //console.log('v', vidErr)
         //Combine errors currently not doing any weighting
         leftErr = tiltErr - gVideo - 10;
         rightErr = tiltErr + gVideo - 10;
@@ -131,9 +106,6 @@ io.on('connection', (client) => {
           ml.pwmWrite(leftErr + avg);
           mr.pwmWrite(rightErr + avg);
         }
-        //time2 = Date.now()
-        //dt = time2 - time1;
-        //console.log(dt);
         io.emit('tilt', {Tilt: gTilt, leftRPM: ml.rpm, leftErr: leftErr, leftPWM: ml.pwm, rightRPM: mr.rpm, rightErr: rightErr, rightPWM: mr.pwm})
       });
       minimu.stderr.on('data', function(data) {
@@ -162,11 +134,9 @@ io.on('connection', (client) => {
   client.on('setTarget', (target) => {
     if (target.leftRPM != null) {
       cl.target = Number(target.leftRPM);
-      //ml.pwmWrite(Number(target.leftRPM));
       io.emit('target', {leftRPM: cl.target})
     } else if (target.rightRPM != null) {
       cr.target = Number(target.rightRPM);
-      //mr.pwmWrite(Number(target.rightRPM));
       io.emit('target', {rightRPM: cr.target})
     } else if (target.Tilt != null) {
       cTilt.target = Number(target.Tilt);
@@ -177,28 +147,28 @@ io.on('connection', (client) => {
   client.on('getTarget', () => {
     io.emit('target', {Tilt: cTilt.target, leftRPM: cl.target, rightRPM: cr.target})
   })
-  client.on('setGains', (gains) => {
+  function setGains (gains) {
     console.log('gains', gains);
     ready = true;
-    cl.kp = Number(gains.kp);
-    cr.kp = Number(gains.kp);
     cTilt.kp = Number(gains.kp);
-
-    cl.kd = Number(gains.kd);
-    cr.kd = Number(gains.kd);
     cTilt.kd = Number(gains.kd);
     emitGains();
-   })
+  }
+  client.on('setGains', setGains)
   function emitGains() {
-    io.emit('gains', {kp: cl.kp, kd: cl.kd})
+    io.emit('gains', {kp: cTilt.kp, kd: cTilt.kd})
   }
   client.on('getGains', emitGains)
+  client.on('start', () => {
+    cTilt.target = -3.5
+    setGains(gains)
+  })
   client.on('stop', () => {
     vision.send({type: 'STOP'})
     if (minimu) {
       process.kill(-minimu.pid);
     }
-    for (let i=0; i<100; i++) {
+    for (let i=0; i<500; i++) {
       cl.target = 0;
       cr.target = 0;
       ml.pwm = 0;
@@ -212,6 +182,6 @@ io.on('connection', (client) => {
 
 server.listen(5000);
 
- global.log = function(value) {
+global.log = function(value) {
   io.emit('log', value);
 }
