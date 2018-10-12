@@ -50,7 +50,7 @@ const getHandContour = (handMask) => {
   contours.sort((c0, c1) => c1.area - c0.area)
   if (contours[0]) {
     lastArea = contours[0].area;
-    console.log('area', contours[0].area)
+    // console.log('area', contours[0].area)
     return contours[0];
   }
  return null;

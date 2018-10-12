@@ -22,6 +22,7 @@ cl.target = 12;
 const cr = new Controller();
 cr.target = 10;
 const cTilt = new Controller();
+cTilt.target = -3.5;
 const gains = {
   kp: 30,
   kd: 900
@@ -160,7 +161,6 @@ io.on('connection', (client) => {
   }
   client.on('getGains', emitGains)
   client.on('start', () => {
-    cTilt.target = -3.5
     setGains(gains)
   })
   client.on('stop', () => {
