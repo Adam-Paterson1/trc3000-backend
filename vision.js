@@ -39,9 +39,9 @@ const makeHandMask = (img) => {
   const thresholded = blurred.threshold(200, 255, cv.THRESH_BINARY);
   return thresholded;
 };
+const mode = cv.RETR_EXTERNAL;
+const method = cv.CHAIN_APPROX_SIMPLE;
 const getHandContour = (handMask) => {
-  const mode = cv.RETR_EXTERNAL;
-  const method = cv.CHAIN_APPROX_SIMPLE;
   let contours = handMask.findContours(mode, method);
   // largest contour
   contours = contours.filter((contour) => {
