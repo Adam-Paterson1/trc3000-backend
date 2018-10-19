@@ -91,7 +91,7 @@ io.on('connection', (client) => {
         dt = time2 - time1;
         time1 = time2;
         if (Math.abs(dt - 10) > 3) {
-          console.log(dt)
+          //console.log(dt)
         }
         //Run all of our controllers
         // Tilt error should be positive if it needs to drive forward and neg for back
@@ -101,7 +101,7 @@ io.on('connection', (client) => {
         //Combine errors currently not doing any weighting
         leftErr = tiltErr - gVideo - 10;
         rightErr = tiltErr + gVideo - 10;
-
+        //console.log(cTilt.target - gTilt);
         const avg = (ml.rpm + mr.rpm) /1.4;
         if (ready) {
           ml.pwmWrite(leftErr + avg);
